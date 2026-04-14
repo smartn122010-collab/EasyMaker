@@ -186,11 +186,14 @@ export default function AdminDashboard() {
   };
 
   const renderDashboard = () => {
+    const deliveredOrders = orders.filter(o => o.status === 'delivered');
+    const totalRevenue = deliveredOrders.reduce((acc, o) => acc + o.totalAmount, 0);
+
     const stats = [
       { label: 'Total Orders', value: orders.length, icon: ShoppingBag, color: 'text-blue-500', bg: 'bg-blue-50' },
-      { label: 'Delivered', value: orders.filter(o => o.status === 'delivered').length, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50' },
+      { label: 'Delivered', value: deliveredOrders.length, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50' },
+      { label: 'Revenue', value: `₹${totalRevenue.toFixed(0)}`, icon: TrendingUp, color: 'text-orange-500', bg: 'bg-orange-50' },
       { label: 'Cancelled', value: orders.filter(o => o.status === 'cancelled').length, icon: XCircle, color: 'text-red-500', bg: 'bg-red-50' },
-      { label: 'Revenue', value: `₹${orders.filter(o => o.status === 'delivered').reduce((acc, o) => acc + o.totalAmount, 0).toFixed(2)}`, icon: TrendingUp, color: 'text-orange-500', bg: 'bg-orange-50' },
     ];
 
     return (
