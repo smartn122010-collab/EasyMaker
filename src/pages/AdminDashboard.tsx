@@ -61,6 +61,7 @@ export default function AdminDashboard() {
     price: '',
     description: '',
     rating: '5',
+    category: 'Burgers',
     imageUrl: 'https://picsum.photos/seed/food/400/300'
   });
 
@@ -167,7 +168,7 @@ export default function AdminDashboard() {
       }
       setShowMenuModal(false);
       setEditingItem(null);
-      setMenuForm({ name: '', price: '', description: '', rating: '5', imageUrl: 'https://picsum.photos/seed/food/400/300' });
+      setMenuForm({ name: '', price: '', description: '', rating: '5', category: 'Burgers', imageUrl: 'https://picsum.photos/seed/food/400/300' });
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -264,7 +265,7 @@ export default function AdminDashboard() {
       <div className="flex justify-between items-center">
         <h3 className="text-2xl font-bold">Menu Items</h3>
         <button 
-          onClick={() => { setEditingItem(null); setMenuForm({ name: '', price: '', description: '', rating: '5', imageUrl: 'https://picsum.photos/seed/food/400/300' }); setShowMenuModal(true); }}
+          onClick={() => { setEditingItem(null); setMenuForm({ name: '', price: '', description: '', rating: '5', category: 'Burgers', imageUrl: 'https://picsum.photos/seed/food/400/300' }); setShowMenuModal(true); }}
           className="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-orange-200 hover:bg-orange-600 transition-all"
         >
           <Plus className="w-5 h-5" />
@@ -297,9 +298,14 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="p-6">
-              <div className="flex justify-between items-start mb-2">
+              <div className="flex justify-between items-start mb-1">
                 <h4 className="font-bold text-lg">{item.name}</h4>
                 <span className="text-orange-500 font-bold text-xl">₹{item.price.toFixed(2)}</span>
+              </div>
+              <div className="mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-orange-50 text-orange-600 px-2 py-0.5 rounded-md">
+                  {item.category || 'Uncategorized'}
+                </span>
               </div>
               <p className="text-gray-400 text-sm line-clamp-2">{item.description}</p>
             </div>
@@ -338,12 +344,23 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-bold text-gray-500 block mb-1">Rating (1-5)</label>
-                    <input 
-                      required type="number" step="0.1" min="1" max="5" value={menuForm.rating} onChange={e => setMenuForm({...menuForm, rating: e.target.value})}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none"
-                    />
+                    <label className="text-sm font-bold text-gray-500 block mb-1">Category</label>
+                    <select 
+                      required value={menuForm.category} onChange={e => setMenuForm({...menuForm, category: e.target.value})}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none appearance-none"
+                    >
+                      {['Burgers', 'Pizza', 'Sushi', 'Desserts', 'Drinks'].map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
                   </div>
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-gray-500 block mb-1">Rating (1-5)</label>
+                  <input 
+                    required type="number" step="0.1" min="1" max="5" value={menuForm.rating} onChange={e => setMenuForm({...menuForm, rating: e.target.value})}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none"
+                  />
                 </div>
                 <div>
                   <label className="text-sm font-bold text-gray-500 block mb-1">Description</label>
