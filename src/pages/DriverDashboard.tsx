@@ -177,7 +177,7 @@ export default function DriverDashboard() {
 
   const stats = [
     { label: 'Deliveries', value: myOrders.filter(o => o.status === 'delivered').length, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50' },
-    { label: 'Earnings', value: `₹${myOrders.filter(o => o.status === 'delivered').reduce((acc, o) => acc + (o.distanceKm ? o.distanceKm * 10 : 0), 0).toFixed(0)}`, icon: TrendingUp, color: 'text-orange-500', bg: 'bg-orange-50' },
+    { label: 'Earnings', value: `₹${(myOrders.filter(o => o.status === 'delivered').length * 10).toFixed(0)}`, icon: TrendingUp, color: 'text-orange-500', bg: 'bg-orange-50' },
     { label: 'Active', value: myOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length, icon: ClipboardList, color: 'text-blue-500', bg: 'bg-blue-50' },
   ];
 
@@ -223,16 +223,6 @@ export default function DriverDashboard() {
                     <MapPin className="w-4 h-4 text-gray-400 mt-1 group-hover:text-orange-500 transition-colors" />
                     <div className="flex-1">
                       <p className="text-sm font-medium group-hover:text-orange-600 transition-colors underline decoration-dotted underline-offset-4">{order.deliveryAddress}</p>
-                      {order.distanceKm && (
-                        <div className="mt-1 flex items-center gap-2">
-                          <span className="text-[10px] font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded">
-                            {order.distanceKm} KM
-                          </span>
-                          <span className="text-[10px] text-gray-400 font-bold">
-                            Payout: ₹{order.distanceKm * 10}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -292,11 +282,6 @@ export default function DriverDashboard() {
                 <h4 className="font-bold text-lg">Order #{order.id.slice(-6)}</h4>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-sm text-gray-400">{order.items.length} items • ₹{order.totalAmount.toFixed(2)}</p>
-                  {order.distanceKm && (
-                    <span className="text-[10px] font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded">
-                      {order.distanceKm} KM (₹{order.distanceKm * 10})
-                    </span>
-                  )}
                 </div>
               </div>
               <span className="px-3 py-1 bg-orange-100 text-orange-600 text-xs font-bold rounded-full uppercase">{order.status}</span>
@@ -323,35 +308,23 @@ export default function DriverDashboard() {
               </div>
             </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button 
-                  onClick={() => openInMaps(order.deliveryAddress)}
-                  className="flex items-center justify-center gap-2 py-4 bg-blue-500 text-white rounded-2xl font-bold shadow-lg shadow-blue-100"
-                >
-                  <Navigation className="w-5 h-5" />
-                  Open Maps
-                </button>
-                
-                <div className="flex gap-2">
-                  <input 
-                    id={`dist-driver-${order.id}`}
-                    type="number" 
-                    placeholder="KM" 
-                    className="w-20 px-3 bg-gray-50 border border-gray-100 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                  <button 
-                    onClick={() => {
-                      const dist = parseFloat((document.getElementById(`dist-driver-${order.id}`) as HTMLInputElement).value);
-                      if (isNaN(dist)) return toast.error("Enter KM distance");
-                      updateOrderStatus(order.id, 'delivered', dist);
-                    }}
-                    className="flex-1 flex items-center justify-center gap-2 py-4 bg-green-500 text-white rounded-2xl font-bold shadow-lg shadow-green-100"
-                  >
-                    <CheckCircle2 className="w-5 h-5" />
-                    Delivered
-                  </button>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button 
+                onClick={() => openInMaps(order.deliveryAddress)}
+                className="flex items-center justify-center gap-2 py-4 bg-blue-500 text-white rounded-2xl font-bold shadow-lg shadow-blue-100"
+              >
+                <Navigation className="w-5 h-5" />
+                Open Maps
+              </button>
+              
+              <button 
+                onClick={() => updateOrderStatus(order.id, 'delivered')}
+                className="flex items-center justify-center gap-2 py-4 bg-green-500 text-white rounded-2xl font-bold shadow-lg shadow-green-100"
+              >
+                <CheckCircle2 className="w-5 h-5" />
+                Delivered
+              </button>
+            </div>
           </div>
         ))}
       </div>
