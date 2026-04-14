@@ -28,7 +28,9 @@ import {
   MessageSquare,
   Truck,
   Users,
-  Send
+  Send,
+  Info,
+  ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
@@ -626,6 +628,59 @@ export default function AdminDashboard() {
     </div>
   );
 
+  const renderAbout = () => (
+    <div className="max-w-2xl mx-auto space-y-8">
+      <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 text-center space-y-6">
+        <div className="w-20 h-20 bg-orange-100 rounded-3xl flex items-center justify-center mx-auto">
+          <Info className="w-10 h-10 text-orange-500" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-3xl font-bold text-gray-900">Easy Maker Admin</h2>
+          <p className="text-orange-500 font-bold tracking-widest uppercase text-xs">Home Made Food Delivery</p>
+        </div>
+        <p className="text-gray-500 leading-relaxed">
+          Welcome to the command center of <strong>Home Made Food Delivery</strong>. 
+          Our mission is to bridge the gap between talented home cooks and hungry customers, 
+          ensuring every meal is delivered with care and quality.
+        </p>
+        
+        <div className="grid grid-cols-1 gap-4 pt-6">
+          <div className="p-6 bg-gray-50 rounded-2xl flex items-center gap-4 text-left">
+            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+              <MapPin className="w-6 h-6 text-gray-400" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase">Headquarters</p>
+              <p className="font-medium">123 Gourmet Lane, Foodie City</p>
+            </div>
+          </div>
+
+          <a 
+            href="https://whatsapp.com/channel/0029Vb7UGl90AgWJQzLO1M34" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="p-6 bg-green-50 rounded-2xl flex items-center justify-between hover:bg-green-100 transition-all group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                <MessageSquare className="w-6 h-6 text-green-500" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-green-600 uppercase">Official Channel</p>
+                <p className="font-bold text-gray-900">WhatsApp Support</p>
+              </div>
+            </div>
+            <ExternalLink className="w-5 h-5 text-gray-300 group-hover:text-green-500 transition-all" />
+          </a>
+        </div>
+
+        <div className="pt-8 border-t border-gray-50">
+          <p className="text-xs text-gray-400">© 2026 Easy Maker • Version 2.0.4</p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <AdminLayout activeTab={activeTab} setActiveTab={setActiveTab}>
       <AnimatePresence mode="wait">
@@ -641,6 +696,7 @@ export default function AdminDashboard() {
           {activeTab === 'orders' && renderOrders()}
           {activeTab === 'dispatch' && renderDispatch()}
           {activeTab === 'drivers' && renderDrivers()}
+          {activeTab === 'about' && renderAbout()}
           {activeTab === 'users' && (
             <div className="bg-white p-12 rounded-3xl text-center border border-gray-100">
               <Users className="w-16 h-16 text-gray-200 mx-auto mb-4" />

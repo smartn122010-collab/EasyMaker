@@ -14,7 +14,9 @@ import {
   LayoutDashboard,
   ClipboardList,
   MessageSquare,
-  ArrowRight
+  ArrowRight,
+  Info,
+  ExternalLink
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
@@ -333,6 +335,36 @@ export default function DriverDashboard() {
         <p className="text-gray-400 mb-8">{auth.currentUser?.email}</p>
         
         <div className="space-y-4">
+          <div className="p-6 bg-orange-50 rounded-3xl text-left space-y-4 border border-orange-100">
+            <div className="flex items-center gap-3 text-orange-900">
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                <Info className="w-5 h-5" />
+              </div>
+              <h4 className="font-bold">About Easy Driver</h4>
+            </div>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Part of the <strong>Home Made Food Delivery</strong> network. We empower local drivers to deliver fresh, home-cooked meals.
+            </p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <MapPin className="w-3 h-3" />
+                <span>Home Made Food Delivery, 123 Gourmet Lane, Foodie City</span>
+              </div>
+              <a 
+                href="https://whatsapp.com/channel/0029Vb7UGl90AgWJQzLO1M34" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-3 bg-white rounded-xl hover:bg-orange-100 transition-all group"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-sm font-bold text-orange-900">Driver Community</span>
+                </div>
+                <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-orange-500" />
+              </a>
+            </div>
+          </div>
+
           <button 
             onClick={() => signOut(auth)}
             className="w-full flex items-center gap-3 p-4 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition-all"

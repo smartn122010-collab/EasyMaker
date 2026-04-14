@@ -15,7 +15,8 @@ import {
   Moon,
   Sun,
   User,
-  Send
+  Send,
+  Info
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -34,6 +35,7 @@ const sidebarItems: SidebarItem[] = [
   { id: 'dispatch', label: 'Send Order', icon: Send },
   { id: 'drivers', label: 'Delivery Driver', icon: Truck },
   { id: 'users', label: 'User Section', icon: Users },
+  { id: 'about', label: 'About Us', icon: Info },
 ];
 
 export default function AdminLayout({ children, activeTab, setActiveTab }: { children: React.ReactNode, activeTab: string, setActiveTab: (tab: string) => void }) {
