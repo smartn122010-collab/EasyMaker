@@ -1,0 +1,149 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields:
+    //   - uid: string (required)
+    //   - name: string (required)
+    //   - email: string (required)
+    //   - role: string (required, enum: ['admin', 'customer', 'driver'])
+    //   - profilePicture: string (optional)
+    //   - darkMode: bool (optional)
+    //   - easyMakerId: string (optional, for admins)
+    //
+    // Collection: menu
+    // Fields:
+    //   - name: string (required)
+    //   - description: string (required)
+    //   - price: number (required)
+    //   - imageUrl: string (optional)
+    //   - rating: number (optional)
+    //   - category: string (optional)
+    //
+    // Collection: orders
+    // Fields:
+    //   - customerId: string (required)
+    //   - driverId: string (optional)
+    //   - items: list (required)
+    //   - status: string (required, enum: ['pending', 'accepted', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'])
+    //   - totalAmount: number (required)
+    //   - deliveryAddress: string (required)
+    //   - customerPhone: string (required)
+    //   - createdAt: timestamp (required)
+    //   - updatedAt: timestamp (required)
+    //   - customerLocation: map (optional)
+    //   - driverLocation: map (optional)
+    //
+    // Collection: messages
+    // Fields:
+    //   - senderId: string (required)
+    //   - receiverId: string (required)
+    //   - text: string (required)
+    //   - timestamp: timestamp (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == "smartnp09812@gmail.com" ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    function isDriver() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'driver';
+    }
+
+    function isCustomer() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == 'customer';
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'name', 'email', 'role']) &&
+             data.uid is string &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.email is string && data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$") &&
+             data.role in ['admin', 'customer', 'driver'];
+    }
+
+    function isValidMenuItem(data) {
+      return data.keys().hasAll(['name', 'price']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.price is number && data.price >= 0;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['customerId', 'items', 'status', 'totalAmount', 'deliveryAddress', 'customerPhone']) &&
+             data.customerId is string &&
+             data.items is list &&
+             data.status in ['pending', 'accepted', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'] &&
+             data.totalAmount is number && data.totalAmount >= 0 &&
+             data.deliveryAddress is string && data.deliveryAddress.size() > 0 &&
+             data.customerPhone is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin() || resource.data.role == 'admin');
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && 
+                    (request.resource.data.role != 'admin' || isAdmin());
+      allow update: if isAuthenticated() && (
+        (isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == resource.data.role) ||
+        isAdmin()
+      );
+    }
+
+    match /menu/{menuItemId} {
+      allow read: if true;
+      allow create, update: if isAdmin() && isValidMenuItem(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        resource.data.customerId == request.auth.uid || 
+        resource.data.driverId == request.auth.uid ||
+        (isDriver() && resource.data.status == 'out_for_delivery')
+      );
+      allow create: if isAuthenticated() && isCustomer() && request.resource.data.customerId == request.auth.uid && isValidOrder(request.resource.data);
+      allow update: if isAuthenticated() && (
+        isAdmin() ||
+        (isDriver() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'driverId', 'driverLocation', 'updatedAt']) && 
+         (resource.data.driverId == request.auth.uid || resource.data.driverId == null)) ||
+        (isCustomer() && resource.data.customerId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']) && 
+         request.resource.data.status == 'cancelled')
+      );
+    }
+
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && (isAdmin() || resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid || request.auth.uid in resource.data.participants);
+      allow create: if isAuthenticated() && (request.auth.uid == request.resource.data.senderId) && (isAdmin() || isDriver() || isCustomer()) && 
+                    request.resource.data.participants.size() == 2 && request.auth.uid in request.resource.data.participants;
+    }
+  }
+}

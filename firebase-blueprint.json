@@ -1,0 +1,116 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "customer", "driver"] },
+        "profilePicture": { "type": "string", "format": "uri" },
+        "darkMode": { "type": "boolean" },
+        "easyMakerId": { "type": "string", "description": "Custom ID for admins like EasyMaker7358" }
+      },
+      "required": ["uid", "name", "email", "role"]
+    },
+    "MenuItem": {
+      "title": "MenuItem",
+      "description": "Food item in the menu",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "rating": { "type": "number" },
+        "category": { "type": "string" }
+      },
+      "required": ["name", "price"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Food order information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerId": { "type": "string" },
+        "driverId": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "menuItemId": { "type": "string" },
+              "name": { "type": "string" },
+              "quantity": { "type": "number" },
+              "price": { "type": "number" }
+            }
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "accepted", "preparing", "out_for_delivery", "delivered", "cancelled"]
+        },
+        "totalAmount": { "type": "number" },
+        "deliveryAddress": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "customerLocation": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "driverLocation": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        }
+      },
+      "required": ["customerId", "items", "status", "totalAmount", "deliveryAddress"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Chat messages between users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "senderId": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "participants": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Array of user IDs involved in the chat"
+        },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "receiverId", "participants", "text", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/menu/{menuItemId}": {
+      "schema": "MenuItem",
+      "description": "Restaurant menu items"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Customer orders"
+    },
+    "/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Admin-Driver chat messages"
+    }
+  }
+}

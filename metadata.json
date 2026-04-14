@@ -1,0 +1,5 @@
+{
+  "name": "Easy Maker Food Delivery",
+  "description": "A full-stack food delivery platform with real-time order tracking, driver management, and dedicated panels for admins, customers, and drivers.",
+  "requestFramePermissions": ["geolocation"]
+}
