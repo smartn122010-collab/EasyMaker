@@ -97,9 +97,11 @@ export default function CustomerDashboard() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isLocating, setIsLocating] = useState(false);
-  const [trackingOrder, setTrackingOrder] = useState<any>(null);
+  const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
   const [customerLocation, setCustomerLocation] = useState<[number, number] | null>(null);
   const prevStatuses = useRef<Record<string, string>>({});
+
+  const trackingOrder = orders.find(o => o.id === trackingOrderId);
 
   const categories = ['All', 'Burgers', 'Pizza', 'Sushi', 'Desserts', 'Drinks'];
 
@@ -148,7 +150,7 @@ export default function CustomerDashboard() {
         let message = "";
         if (order.status === 'picked_up') {
           message = "🛵 Order picked up! Rider is on the way.";
-          setTrackingOrder(order); // Auto-open tracking map on pickup
+          setTrackingOrderId(order.id); // Auto-open tracking map on pickup
         }
         if (order.status === 'delivered') message = "✅ Order delivered! Enjoy your meal.";
         if (order.status === 'accepted') message = "👨‍🍳 Restaurant accepted your order.";
@@ -282,6 +284,36 @@ export default function CustomerDashboard() {
           <Filter className="w-6 h-6" />
         </button>
       </div>
+
+      {/* Active Orders */}
+      {orders.filter(o => ['accepted', 'preparing', 'picked_up'].includes(o.status)).length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-lg font-bold text-brand-900">Active Orders</h3>
+            <button onClick={() => setActiveTab('history')} className="text-brand-500 text-sm font-bold">View All</button>
+          </div>
+          <div className="space-y-3">
+            {orders.filter(o => ['accepted', 'preparing', 'picked_up'].includes(o.status)).map(order => (
+              <div key={order.id} className="bg-brand-900 p-6 rounded-[2rem] text-white shadow-xl shadow-brand-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16" />
+                <div className="relative z-10 flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-brand-500 uppercase tracking-widest">#{order.id.slice(-6)}</p>
+                    <h4 className="text-lg font-bold">{order.status.replace('_', ' ')}</h4>
+                    <p className="text-xs text-brand-100/60">Estimated: 15-20 mins</p>
+                  </div>
+                  <button 
+                    onClick={() => setTrackingOrderId(order.id)}
+                    className="px-6 py-3 bg-brand-500 text-white rounded-2xl font-bold text-sm shadow-lg"
+                  >
+                    Track Live
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Categories */}
       <div className="space-y-4">
@@ -528,7 +560,7 @@ export default function CustomerDashboard() {
                 </div>
                 {['accepted', 'preparing', 'picked_up'].includes(order.status) && (
                   <button 
-                    onClick={() => setTrackingOrder(order)}
+                    onClick={() => setTrackingOrderId(order.id)}
                     className="px-6 py-3 bg-brand-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-brand-100"
                   >
                     Track Live
@@ -741,11 +773,11 @@ export default function CustomerDashboard() {
 
       {/* Tracking Modal */}
       <AnimatePresence>
-        {trackingOrder && (
+        {trackingOrderId && trackingOrder && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setTrackingOrder(null)}
+              onClick={() => setTrackingOrderId(null)}
               className="absolute inset-0 bg-black/60 backdrop-blur-md" 
             />
             <motion.div 
@@ -758,7 +790,7 @@ export default function CustomerDashboard() {
                   <p className="text-sm text-gray-400">Order #{trackingOrder.id.slice(-6)} • {trackingOrder.status.replace('_', ' ')}</p>
                 </div>
                 <button 
-                  onClick={() => setTrackingOrder(null)}
+                  onClick={() => setTrackingOrderId(null)}
                   className="p-2 bg-gray-100 rounded-full text-gray-400 hover:text-gray-600"
                 >
                   <Plus className="w-6 h-6 rotate-45" />
@@ -766,6 +798,17 @@ export default function CustomerDashboard() {
               </div>
 
               <div className="flex-1 relative">
+                {!trackingOrder.driverLocation && (
+                  <div className="absolute inset-0 z-[2000] bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center space-y-4">
+                    <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center animate-bounce">
+                      <Truck className="w-8 h-8 text-brand-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-brand-900">Waiting for Driver</h4>
+                      <p className="text-sm text-gray-500">The driver hasn't started moving yet. We'll show their location here soon!</p>
+                    </div>
+                  </div>
+                )}
                 <MapContainer 
                   center={customerLocation || [12.9716, 77.5946]} 
                   zoom={15} 
