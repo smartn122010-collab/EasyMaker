@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { auth, db } from '../lib/firebase';
 import { collection, query, onSnapshot, addDoc, doc, updateDoc, getDoc, where } from 'firebase/firestore';
 import { 
@@ -30,6 +30,57 @@ import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import { signOut } from 'firebase/auth';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+
+// Fix Leaflet default icon issue
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+// Custom icons
+const driverIcon = L.divIcon({
+  className: 'custom-div-icon',
+  html: `<div style="background-color: #ff8c42; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; display: flex; items-center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+        </div>`,
+  iconSize: [30, 30],
+  iconAnchor: [15, 15]
+});
+
+const restaurantIcon = L.divIcon({
+  className: 'custom-div-icon',
+  html: `<div style="background-color: #ef4444; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; display: flex; items-center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        </div>`,
+  iconSize: [30, 30],
+  iconAnchor: [15, 15]
+});
+
+const customerIcon = L.divIcon({
+  className: 'custom-div-icon',
+  html: `<div style="background-color: #3b82f6; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; display: flex; items-center; justify-content: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </div>`,
+  iconSize: [30, 30],
+  iconAnchor: [15, 15]
+});
+
+function MapUpdater({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center);
+  }, [center, map]);
+  return null;
+}
 
 export default function CustomerDashboard() {
   const [activeTab, setActiveTab] = useState('home');
@@ -40,6 +91,9 @@ export default function CustomerDashboard() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isLocating, setIsLocating] = useState(false);
+  const [trackingOrder, setTrackingOrder] = useState<any>(null);
+  const [customerLocation, setCustomerLocation] = useState<[number, number] | null>(null);
+  const prevStatuses = useRef<Record<string, string>>({});
 
   const categories = ['All', 'Burgers', 'Pizza', 'Sushi', 'Desserts', 'Drinks'];
 
@@ -71,6 +125,33 @@ export default function CustomerDashboard() {
       }
     );
   };
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        setCustomerLocation([pos.coords.latitude, pos.coords.longitude]);
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    // Status change notifications
+    orders.forEach(order => {
+      const prevStatus = prevStatuses.current[order.id];
+      if (prevStatus && prevStatus !== order.status) {
+        let message = "";
+        if (order.status === 'picked_up') message = "🛵 Order picked up! Rider is on the way.";
+        if (order.status === 'delivered') message = "✅ Order delivered! Enjoy your meal.";
+        if (order.status === 'accepted') message = "👨‍🍳 Restaurant accepted your order.";
+        
+        if (message) {
+          toast.success(message, { duration: 5000 });
+          playNotificationSound();
+        }
+      }
+      prevStatuses.current[order.id] = order.status;
+    });
+  }, [orders]);
 
   useEffect(() => {
     const qMenu = query(collection(db, 'menu'));
@@ -430,9 +511,19 @@ export default function CustomerDashboard() {
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between items-center pt-6 border-t border-gray-50">
-                <div className="text-xs text-gray-400 font-medium">Total Amount Paid</div>
-                <span className="font-bold text-xl text-brand-900">₹{order.totalAmount.toFixed(0)}</span>
+              <div className="flex justify-between items-center pt-6 border-t border-gray-50 gap-4">
+                <div className="flex-1">
+                  <div className="text-xs text-gray-400 font-medium">Total Amount Paid</div>
+                  <span className="font-bold text-xl text-brand-900">₹{order.totalAmount.toFixed(0)}</span>
+                </div>
+                {['accepted', 'preparing', 'picked_up'].includes(order.status) && (
+                  <button 
+                    onClick={() => setTrackingOrder(order)}
+                    className="px-6 py-3 bg-brand-500 text-white rounded-2xl font-bold text-sm shadow-lg shadow-brand-100"
+                  >
+                    Track Live
+                  </button>
+                )}
               </div>
             </motion.div>
           ))

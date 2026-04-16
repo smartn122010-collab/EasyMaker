@@ -244,9 +244,10 @@ export default function AdminDashboard() {
                         "px-3 py-1 rounded-full text-xs font-bold uppercase",
                         order.status === 'delivered' ? "bg-green-100 text-green-600" :
                         order.status === 'cancelled' ? "bg-red-100 text-red-600" :
+                        order.status === 'picked_up' ? "bg-blue-100 text-blue-600" :
                         "bg-orange-100 text-orange-600"
                       )}>
-                        {order.status}
+                        {order.status.replace('_', ' ')}
                       </span>
                     </td>
                     <td className="px-6 py-4 font-bold">₹{order.totalAmount.toFixed(2)}</td>
@@ -399,8 +400,10 @@ export default function AdminDashboard() {
                 <span className="text-sm font-bold text-orange-500">#{order.id.slice(-6)}</span>
                 <span className={cn(
                   "px-3 py-1 rounded-full text-xs font-bold uppercase",
-                  order.status === 'delivered' ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"
-                )}>{order.status}</span>
+                  order.status === 'delivered' ? "bg-green-100 text-green-600" : 
+                  order.status === 'picked_up' ? "bg-blue-100 text-blue-600" :
+                  "bg-orange-100 text-orange-600"
+                )}>{order.status.replace('_', ' ')}</span>
               </div>
               <div className="space-y-3">
                 <div className="flex items-start gap-3">

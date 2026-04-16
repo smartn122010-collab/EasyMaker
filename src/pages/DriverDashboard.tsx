@@ -33,12 +33,47 @@ export default function DriverDashboard() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [confirmAcceptId, setConfirmAcceptId] = useState<string | null>(null);
   const [showSuccessTick, setShowSuccessTick] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
+  const watchId = useRef<number | null>(null);
   const prevAvailableCount = useRef<number | null>(null);
   const notificationSound = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     notificationSound.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
   }, []);
+
+  useEffect(() => {
+    // Watch driver location if they have an active order
+    const activeOrder = myOrders.find(o => ['accepted', 'preparing', 'picked_up'].includes(o.status));
+    
+    if (activeOrder && navigator.geolocation) {
+      watchId.current = navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCurrentLocation({ lat: latitude, lng: longitude });
+          
+          // Update order with driver location
+          updateDoc(doc(db, 'orders', activeOrder.id), {
+            driverLocation: { lat: latitude, lng: longitude },
+            updatedAt: new Date().toISOString()
+          }).catch(err => console.error("Error updating location:", err));
+        },
+        (error) => console.error("Geolocation error:", error),
+        { enableHighAccuracy: true }
+      );
+    } else {
+      if (watchId.current !== null) {
+        navigator.geolocation.clearWatch(watchId.current);
+        watchId.current = null;
+      }
+    }
+
+    return () => {
+      if (watchId.current !== null) {
+        navigator.geolocation.clearWatch(watchId.current);
+      }
+    };
+  }, [myOrders]);
 
   useEffect(() => {
     // Available orders (accepted by admin but no driver yet)
@@ -317,13 +352,23 @@ export default function DriverDashboard() {
                 Open Maps
               </button>
               
-              <button 
-                onClick={() => updateOrderStatus(order.id, 'delivered')}
-                className="flex items-center justify-center gap-2 py-4 bg-green-500 text-white rounded-2xl font-bold shadow-lg shadow-green-100"
-              >
-                <CheckCircle2 className="w-5 h-5" />
-                Delivered
-              </button>
+              {order.status === 'picked_up' ? (
+                <button 
+                  onClick={() => updateOrderStatus(order.id, 'delivered')}
+                  className="flex items-center justify-center gap-2 py-4 bg-green-500 text-white rounded-2xl font-bold shadow-lg shadow-green-100"
+                >
+                  <CheckCircle2 className="w-5 h-5" />
+                  Delivered
+                </button>
+              ) : (
+                <button 
+                  onClick={() => updateOrderStatus(order.id, 'picked_up')}
+                  className="flex items-center justify-center gap-2 py-4 bg-orange-500 text-white rounded-2xl font-bold shadow-lg shadow-orange-100"
+                >
+                  <Truck className="w-5 h-5" />
+                  Picked Up
+                </button>
+              )}
             </div>
           </div>
         ))}
