@@ -24,13 +24,14 @@ import {
   MapPinned,
   PhoneCall,
   Info,
-  ExternalLink
+  ExternalLink,
+  Truck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import { signOut } from 'firebase/auth';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 
 // Fix Leaflet default icon issue
@@ -74,11 +75,16 @@ const customerIcon = L.divIcon({
   iconAnchor: [15, 15]
 });
 
-function MapUpdater({ center }: { center: [number, number] }) {
+function MapUpdater({ driverLoc, customerLoc }: { driverLoc: [number, number], customerLoc: [number, number] | null }) {
   const map = useMap();
   useEffect(() => {
-    map.setView(center);
-  }, [center, map]);
+    if (customerLoc) {
+      const bounds = L.latLngBounds([driverLoc, customerLoc]);
+      map.fitBounds(bounds, { padding: [50, 50] });
+    } else {
+      map.setView(driverLoc, 15);
+    }
+  }, [driverLoc, customerLoc, map]);
   return null;
 }
 
@@ -140,7 +146,10 @@ export default function CustomerDashboard() {
       const prevStatus = prevStatuses.current[order.id];
       if (prevStatus && prevStatus !== order.status) {
         let message = "";
-        if (order.status === 'picked_up') message = "🛵 Order picked up! Rider is on the way.";
+        if (order.status === 'picked_up') {
+          message = "🛵 Order picked up! Rider is on the way.";
+          setTrackingOrder(order); // Auto-open tracking map on pickup
+        }
         if (order.status === 'delivered') message = "✅ Order delivered! Enjoy your meal.";
         if (order.status === 'accepted') message = "👨‍🍳 Restaurant accepted your order.";
         
@@ -208,6 +217,7 @@ export default function CustomerDashboard() {
         totalAmount,
         deliveryAddress: address,
         customerPhone: phone,
+        customerCoords: customerLocation ? { lat: customerLocation[0], lng: customerLocation[1] } : null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -728,6 +738,119 @@ export default function CustomerDashboard() {
           </button>
         ))}
       </nav>
+
+      {/* Tracking Modal */}
+      <AnimatePresence>
+        {trackingOrder && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setTrackingOrder(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md" 
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-[2.5rem] w-full max-w-2xl h-[80vh] relative z-10 shadow-2xl overflow-hidden flex flex-col"
+            >
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold">Live Tracking</h3>
+                  <p className="text-sm text-gray-400">Order #{trackingOrder.id.slice(-6)} • {trackingOrder.status.replace('_', ' ')}</p>
+                </div>
+                <button 
+                  onClick={() => setTrackingOrder(null)}
+                  className="p-2 bg-gray-100 rounded-full text-gray-400 hover:text-gray-600"
+                >
+                  <Plus className="w-6 h-6 rotate-45" />
+                </button>
+              </div>
+
+              <div className="flex-1 relative">
+                <MapContainer 
+                  center={customerLocation || [12.9716, 77.5946]} 
+                  zoom={15} 
+                  style={{ height: '100%', width: '100%' }}
+                  zoomControl={false}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  />
+                  
+                  {/* Restaurant (Static Bangalore for demo if not set) */}
+                  <Marker position={[12.9716, 77.5946]} icon={restaurantIcon}>
+                    <Popup>Restaurant</Popup>
+                  </Marker>
+
+                  {/* Driver */}
+                  {trackingOrder.driverLocation && (
+                    <>
+                      <Marker position={[trackingOrder.driverLocation.lat, trackingOrder.driverLocation.lng]} icon={driverIcon}>
+                        <Popup>Delivery Partner</Popup>
+                      </Marker>
+                      
+                      {/* Route Line */}
+                      {(trackingOrder.customerCoords || customerLocation) && (
+                        <Polyline 
+                          positions={[
+                            [trackingOrder.driverLocation.lat, trackingOrder.driverLocation.lng],
+                            trackingOrder.customerCoords 
+                              ? [trackingOrder.customerCoords.lat, trackingOrder.customerCoords.lng]
+                              : (customerLocation as [number, number])
+                          ]}
+                          color="#ff8c42"
+                          weight={4}
+                          dashArray="10, 10"
+                          opacity={0.6}
+                        />
+                      )}
+
+                      <MapUpdater 
+                        driverLoc={[trackingOrder.driverLocation.lat, trackingOrder.driverLocation.lng]} 
+                        customerLoc={trackingOrder.customerCoords 
+                          ? [trackingOrder.customerCoords.lat, trackingOrder.customerCoords.lng] 
+                          : customerLocation} 
+                      />
+                    </>
+                  )}
+
+                  {/* Customer */}
+                  {(trackingOrder.customerCoords || customerLocation) && (
+                    <Marker 
+                      position={trackingOrder.customerCoords 
+                        ? [trackingOrder.customerCoords.lat, trackingOrder.customerCoords.lng] 
+                        : (customerLocation as [number, number])} 
+                      icon={customerIcon}
+                    >
+                      <Popup>You</Popup>
+                    </Marker>
+                  )}
+                </MapContainer>
+
+                {/* Floating Status Card */}
+                <div className="absolute bottom-6 left-6 right-6 z-[1000]">
+                  <div className="bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/20">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-brand-50 rounded-2xl flex items-center justify-center">
+                        <Truck className="w-6 h-6 text-brand-500" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-gray-400 uppercase tracking-wider">Estimated Delivery</p>
+                        <p className="text-xl font-bold">15-20 mins</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="px-3 py-1 bg-green-100 text-green-600 text-xs font-bold rounded-full uppercase">
+                          {trackingOrder.status === 'picked_up' ? 'On the way' : 'Preparing'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
