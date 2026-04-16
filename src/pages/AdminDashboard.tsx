@@ -186,14 +186,25 @@ export default function AdminDashboard() {
     toast.success(`Order status updated to ${status}`);
   };
 
+  const handleDeleteOrder = async (orderId: string) => {
+    if (confirm('Are you sure you want to delete this order from history? This action cannot be undone.')) {
+      try {
+        await deleteDoc(doc(db, 'orders', orderId));
+        toast.success('Order deleted successfully');
+      } catch (error: any) {
+        toast.error('Failed to delete order: ' + error.message);
+      }
+    }
+  };
+
   const renderDashboard = () => {
     const deliveredOrders = orders.filter(o => o.status === 'delivered');
     const totalRevenue = deliveredOrders.reduce((acc, o) => acc + o.totalAmount, 0);
 
     const stats = [
-      { label: 'Total Orders', value: orders.length, icon: ShoppingBag, color: 'text-blue-500', bg: 'bg-blue-50' },
+      { label: 'Total Orders', value: orders.length, icon: ShoppingBag, color: 'text-brand-500', bg: 'bg-brand-50' },
       { label: 'Delivered', value: deliveredOrders.length, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50' },
-      { label: 'Revenue', value: `₹${totalRevenue.toFixed(0)}`, icon: TrendingUp, color: 'text-orange-500', bg: 'bg-orange-50' },
+      { label: 'Revenue', value: `₹${totalRevenue.toFixed(0)}`, icon: TrendingUp, color: 'text-brand-500', bg: 'bg-brand-50' },
       { label: 'Cancelled', value: orders.filter(o => o.status === 'cancelled').length, icon: XCircle, color: 'text-red-500', bg: 'bg-red-50' },
     ];
 
@@ -206,51 +217,60 @@ export default function AdminDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               key={stat.label}
-              className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-4"
+              className="glass-luxury p-6 rounded-[2rem] luxury-shadow flex items-center gap-4"
             >
               <div className={cn("p-4 rounded-2xl", stat.bg)}>
                 <stat.icon className={cn("w-6 h-6", stat.color)} />
               </div>
               <div>
-                <p className="text-sm text-gray-400 font-medium">{stat.label}</p>
-                <p className="text-2xl font-bold">{stat.value}</p>
+                <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{stat.label}</p>
+                <p className="text-2xl font-bold text-brand-900">{stat.value}</p>
               </div>
             </motion.div>
           ))}
         </div>
 
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-50 flex items-center justify-between">
-            <h3 className="font-bold text-lg">Recent Orders</h3>
-            <button onClick={() => setActiveTab('orders')} className="text-orange-500 text-sm font-bold hover:underline">View All</button>
+        <div className="bg-white rounded-[2.5rem] luxury-shadow border border-brand-50 overflow-hidden">
+          <div className="p-8 border-b border-brand-50 flex items-center justify-between">
+            <h3 className="font-serif text-xl font-bold text-brand-900">Recent Orders</h3>
+            <button onClick={() => setActiveTab('orders')} className="text-brand-500 text-xs font-black uppercase tracking-widest hover:text-brand-600 transition-all">View All</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="text-gray-400 text-sm uppercase tracking-wider">
-                  <th className="px-6 py-4 font-medium">Order ID</th>
-                  <th className="px-6 py-4 font-medium">Customer</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium">Amount</th>
+                <tr className="text-gray-400 text-[10px] uppercase tracking-[0.2em] font-black">
+                  <th className="px-8 py-6 font-black">Order ID</th>
+                  <th className="px-8 py-6 font-black">Customer</th>
+                  <th className="px-8 py-6 font-black">Status</th>
+                  <th className="px-8 py-6 font-black">Amount</th>
+                  <th className="px-8 py-6 font-black text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-brand-50">
                 {orders.slice(0, 5).map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 font-medium">#{order.id.slice(-6)}</td>
-                    <td className="px-6 py-4">{order.deliveryAddress}</td>
-                    <td className="px-6 py-4">
+                  <tr key={order.id} className="hover:bg-brand-50/50 transition-colors group">
+                    <td className="px-8 py-5 font-bold text-brand-500 text-sm">#{order.id.slice(-6)}</td>
+                    <td className="px-8 py-5 text-sm text-gray-600 font-medium">{order.deliveryAddress}</td>
+                    <td className="px-8 py-5">
                       <span className={cn(
-                        "px-3 py-1 rounded-full text-xs font-bold uppercase",
+                        "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
                         order.status === 'delivered' ? "bg-green-100 text-green-600" :
                         order.status === 'cancelled' ? "bg-red-100 text-red-600" :
                         order.status === 'picked_up' ? "bg-blue-100 text-blue-600" :
-                        "bg-orange-100 text-orange-600"
+                        "bg-brand-100 text-brand-500"
                       )}>
                         {order.status.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 font-bold">₹{order.totalAmount.toFixed(2)}</td>
+                    <td className="px-8 py-5 font-bold text-brand-900">₹{order.totalAmount.toFixed(0)}</td>
+                    <td className="px-8 py-5 text-right">
+                      <button 
+                        onClick={() => handleDeleteOrder(order.id)}
+                        className="p-2 text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -390,19 +410,31 @@ export default function AdminDashboard() {
   );
 
   const renderOrders = () => (
-    <div className="space-y-6">
-      <h3 className="text-2xl font-bold">Incoming Orders</h3>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <h3 className="text-3xl font-serif font-bold text-brand-900">Incoming Orders</h3>
+        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+          <Clock className="w-3 h-3" />
+          Real-time Updates
+        </div>
+      </div>
       <div className="grid grid-cols-1 gap-6">
         {orders.map((order) => (
-          <motion.div layout key={order.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6">
+          <motion.div layout key={order.id} className="bg-white p-8 rounded-[2.5rem] luxury-shadow border border-brand-50 flex flex-col md:flex-row gap-8 group relative">
+            <button 
+              onClick={() => handleDeleteOrder(order.id)}
+              className="absolute top-6 right-6 p-2 text-gray-200 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
             <div className="flex-1">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-bold text-orange-500">#{order.id.slice(-6)}</span>
+              <div className="flex items-center justify-between mb-6">
+                <span className="text-xs font-black text-brand-500 uppercase tracking-widest">#{order.id.slice(-6)}</span>
                 <span className={cn(
-                  "px-3 py-1 rounded-full text-xs font-bold uppercase",
+                  "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
                   order.status === 'delivered' ? "bg-green-100 text-green-600" : 
                   order.status === 'picked_up' ? "bg-blue-100 text-blue-600" :
-                  "bg-orange-100 text-orange-600"
+                  "bg-brand-100 text-brand-500"
                 )}>{order.status.replace('_', ' ')}</span>
               </div>
               <div className="space-y-3">

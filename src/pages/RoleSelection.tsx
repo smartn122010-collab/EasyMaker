@@ -61,57 +61,61 @@ export default function RoleSelection() {
   ];
 
   return (
-    <div className="min-h-screen bg-surface-50 flex items-center justify-center p-6">
-      <div className="max-w-4xl w-full">
-        <div className="text-center mb-16 space-y-4">
-          <h1 className="text-5xl font-bold text-brand-900 tracking-tight">Choose Your Role</h1>
-          <p className="text-gray-500 text-lg">Select how you want to use Easy Maker</p>
+    <div className="min-h-screen bg-brand-100 flex items-center justify-center p-8">
+      <div className="max-w-5xl w-full">
+        <div className="text-center mb-20 space-y-6">
+          <h1 className="text-6xl font-serif font-light text-brand-900 tracking-tight leading-tight">
+            Choose Your <span className="font-bold italic text-brand-500">Role</span>
+          </h1>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Select your path in the Easy Maker ecosystem</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {roles.map((role) => (
             <motion.button
               key={role.id}
-              whileHover={{ y: -8 }}
+              whileHover={{ y: -12 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setSelectedRole(role.id)}
               className={cn(
-                "relative p-10 rounded-[2.5rem] bg-white border-2 transition-all text-left group soft-shadow",
-                selectedRole === role.id ? "border-brand-500 ring-8 ring-brand-50" : "border-transparent hover:border-brand-100"
+                "relative p-12 rounded-[3.5rem] bg-white transition-all text-left group luxury-shadow border",
+                selectedRole === role.id ? "border-brand-500 ring-1 ring-brand-500/20" : "border-brand-50 hover:border-brand-100"
               )}
             >
-              <div className={cn("w-20 h-20 rounded-3xl flex items-center justify-center mb-8 transition-all", role.color, role.shadow)}>
-                <role.icon className="w-10 h-10 text-white" />
+              <div className={cn("w-24 h-24 rounded-[2rem] flex items-center justify-center mb-10 transition-all luxury-shadow", 
+                role.id === 'customer' ? 'charcoal-gradient' : 
+                role.id === 'driver' ? 'charcoal-gradient' : 'charcoal-gradient')}>
+                <role.icon className="w-10 h-10 text-brand-500" />
               </div>
-              <h3 className="text-2xl font-bold text-brand-900 mb-3">{role.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{role.description}</p>
+              <h3 className="text-3xl font-serif font-light text-brand-900 mb-4 tracking-tight">{role.title}</h3>
+              <p className="text-gray-400 text-sm font-medium leading-relaxed mb-4">{role.description}</p>
               
               {selectedRole === role.id && (
-                <div className="absolute top-6 right-6 w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center shadow-lg shadow-brand-100">
-                  <CheckCircle2 className="w-5 h-5 text-white" />
+                <div className="absolute top-8 right-8 w-10 h-10 charcoal-gradient rounded-2xl flex items-center justify-center luxury-shadow">
+                  <CheckCircle2 className="w-6 h-6 text-brand-500" />
                 </div>
               )}
             </motion.button>
           ))}
         </div>
 
-        <div className="mt-16 flex justify-center">
+        <div className="mt-20 flex justify-center">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleRoleSelection}
             disabled={!selectedRole || loading}
             className={cn(
-              "px-16 py-5 rounded-2xl font-bold text-white transition-all flex items-center gap-4 shadow-2xl text-lg",
-              selectedRole ? "bg-brand-900 hover:bg-black shadow-brand-100" : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              "px-20 py-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] text-white transition-all flex items-center gap-6 luxury-shadow",
+              selectedRole ? "charcoal-gradient hover:scale-105" : "bg-gray-200 text-gray-400 cursor-not-allowed"
             )}
           >
             {loading ? (
-              <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                Get Started
-                <ArrowRight className="w-6 h-6" />
+                Continue Journey
+                <ArrowRight className="w-6 h-6 text-brand-500" />
               </>
             )}
           </motion.button>

@@ -239,14 +239,14 @@ export default function CustomerDashboard() {
   });
 
   const renderHome = () => (
-    <div className="space-y-8 pb-32">
+    <div className="space-y-10 pb-32">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-brand-900">
-            Hey, {auth.currentUser?.displayName?.split(' ')[0] || 'Foodie'}! 👋
+        <div className="space-y-1.5">
+          <h1 className="text-3xl font-serif font-light tracking-tight text-brand-900 leading-tight">
+            Hey, <span className="font-bold italic text-brand-500">{auth.currentUser?.displayName?.split(' ')[0] || 'Foodie'}</span>! 👋
           </h1>
-          <div className="flex items-center gap-1 text-gray-500 text-sm">
+          <div className="flex items-center gap-2 text-gray-400 text-[10px] font-black uppercase tracking-widest">
             <MapPin className="w-3 h-3 text-brand-500" />
             <span>Deliver to: Home • 123 Street</span>
           </div>
@@ -261,53 +261,58 @@ export default function CustomerDashboard() {
               icon: <Bell className="w-4 h-4 text-brand-500" />
             });
           }}
-          className="w-12 h-12 rounded-2xl bg-white soft-shadow flex items-center justify-center relative"
+          className="w-14 h-14 rounded-2xl bg-white luxury-shadow flex items-center justify-center relative border border-brand-50"
         >
-          <Bell className="w-6 h-6 text-gray-400" />
-          <span className="absolute top-3 right-3 w-2 h-2 bg-brand-500 rounded-full border-2 border-white" />
+          <Bell className="w-6 h-6 text-gray-300" />
+          <span className="absolute top-4 right-4 w-2 h-2 bg-brand-500 rounded-full border-2 border-white" />
         </motion.button>
       </div>
 
       {/* Search & Filter */}
-      <div className="flex gap-3">
+      <div className="flex gap-4">
         <div className="relative flex-1 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-brand-500 transition-colors" />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 w-5 h-5 group-focus-within:text-brand-500 transition-colors" />
           <input 
             type="text"
             placeholder="Craving something specific?"
-            className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl soft-shadow border-none focus:ring-2 focus:ring-brand-500 outline-none transition-all placeholder:text-gray-300"
+            className="w-full pl-14 pr-6 py-5 bg-white rounded-2xl luxury-shadow border-none focus:ring-1 focus:ring-brand-500/30 outline-none transition-all placeholder:text-gray-300 text-sm font-medium"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
         </div>
-        <button className="w-14 h-14 bg-brand-900 text-white rounded-2xl flex items-center justify-center soft-shadow">
+        <button className="w-16 h-16 charcoal-gradient text-white rounded-2xl flex items-center justify-center luxury-shadow">
           <Filter className="w-6 h-6" />
         </button>
       </div>
 
       {/* Active Orders */}
       {orders.filter(o => ['accepted', 'preparing', 'picked_up'].includes(o.status)).length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div className="flex items-center justify-between px-1">
-            <h3 className="text-lg font-bold text-brand-900">Active Orders</h3>
-            <button onClick={() => setActiveTab('history')} className="text-brand-500 text-sm font-bold">View All</button>
+            <h3 className="text-xs font-black text-brand-900 uppercase tracking-[0.2em]">Active Orders</h3>
+            <button onClick={() => setActiveTab('history')} className="text-brand-500 text-[10px] font-black uppercase tracking-widest">View All</button>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {orders.filter(o => ['accepted', 'preparing', 'picked_up'].includes(o.status)).map(order => (
-              <div key={order.id} className="bg-brand-900 p-6 rounded-[2rem] text-white shadow-xl shadow-brand-100 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16" />
+              <div key={order.id} className="charcoal-gradient p-8 rounded-[2.5rem] text-white luxury-shadow relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -mr-24 -mt-24 group-hover:scale-110 transition-transform duration-1000" />
                 <div className="relative z-10 flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold text-brand-500 uppercase tracking-widest">#{order.id.slice(-6)}</p>
-                    <h4 className="text-lg font-bold">{order.status.replace('_', ' ')}</h4>
-                    <p className="text-xs text-brand-100/60">Estimated: 15-20 mins</p>
+                  <div className="space-y-2">
+                    <p className="text-[10px] font-black text-brand-500 uppercase tracking-[0.3em]">#{order.id.slice(-6)}</p>
+                    <h4 className="text-2xl font-serif font-light tracking-tight">{order.status.replace('_', ' ')}</h4>
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/40">
+                      <Clock className="w-3 h-3" />
+                      Estimated: 15-20 mins
+                    </div>
                   </div>
-                  <button 
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setTrackingOrderId(order.id)}
-                    className="px-6 py-3 bg-brand-500 text-white rounded-2xl font-bold text-sm shadow-lg"
+                    className="px-8 py-4 bg-brand-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-brand-500/20"
                   >
                     Track Live
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             ))}
@@ -316,9 +321,9 @@ export default function CustomerDashboard() {
       )}
 
       {/* Categories */}
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-lg font-bold text-brand-900">Categories</h3>
+          <h3 className="text-xs font-black text-brand-900 uppercase tracking-[0.2em]">Categories</h3>
         </div>
         <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-6 px-6">
           {categories.map((cat) => (
@@ -327,10 +332,10 @@ export default function CustomerDashboard() {
               whileTap={{ scale: 0.95 }}
               onClick={() => setSelectedCategory(cat)}
               className={cn(
-                "px-6 py-3 rounded-2xl font-bold whitespace-nowrap transition-all flex items-center gap-2",
+                "px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest whitespace-nowrap transition-all flex items-center gap-2",
                 selectedCategory === cat 
-                  ? "bg-brand-500 text-white shadow-lg shadow-brand-100" 
-                  : "bg-white text-gray-500 soft-shadow"
+                  ? "charcoal-gradient text-white luxury-shadow" 
+                  : "bg-white text-gray-400 luxury-shadow border border-brand-50"
               )}
             >
               {cat}
@@ -340,57 +345,58 @@ export default function CustomerDashboard() {
       </div>
 
       {/* Featured Items / Popular */}
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-lg font-bold text-brand-900">Popular Dishes</h3>
-          <button className="text-brand-500 font-bold text-sm flex items-center gap-1">
+          <h3 className="text-xs font-black text-brand-900 uppercase tracking-[0.2em]">Popular Dishes</h3>
+          <button className="text-brand-500 font-black text-[10px] uppercase tracking-widest flex items-center gap-1">
             View All <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 gap-8">
           {filteredMenu.map((item, idx) => (
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
               key={item.id} 
-              className="bg-white rounded-[2.5rem] soft-shadow border border-gray-50 overflow-hidden group flex flex-col sm:flex-row"
+              className="bg-white rounded-[3rem] luxury-shadow border border-brand-50 overflow-hidden group flex flex-col sm:flex-row"
             >
-              <div className="relative w-full sm:w-48 h-48 sm:h-auto overflow-hidden">
+              <div className="relative w-full sm:w-56 h-56 sm:h-auto overflow-hidden">
                 <img 
                   src={item.imageUrl} 
                   alt={item.name} 
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
                   referrerPolicy="no-referrer"
                 />
-                <button className="absolute top-4 left-4 w-10 h-10 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <button className="absolute top-6 left-6 w-12 h-12 bg-white/80 backdrop-blur-md rounded-2xl flex items-center justify-center text-gray-400 hover:text-brand-500 transition-all luxury-shadow">
                   <Heart className="w-5 h-5" />
                 </button>
-                <div className="absolute bottom-4 right-4 bg-brand-900 text-white px-3 py-1 rounded-full flex items-center gap-1 text-xs font-bold">
-                  <Star className="w-3 h-3 fill-white" />
+                <div className="absolute bottom-6 right-6 charcoal-gradient text-white px-4 py-1.5 rounded-full flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
+                  <Star className="w-3 h-3 fill-brand-500 text-brand-500" />
                   {item.rating}
                 </div>
               </div>
-              <div className="p-6 flex-1 flex flex-col justify-between">
+              <div className="p-8 flex-1 flex flex-col justify-between">
                 <div>
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-bold text-xl text-brand-900">{item.name}</h4>
-                    <span className="text-brand-500 font-bold text-2xl">₹{item.price.toFixed(0)}</span>
+                  <div className="flex justify-between items-start mb-3">
+                    <h4 className="font-serif text-2xl font-light text-brand-900 tracking-tight leading-tight">{item.name}</h4>
+                    <span className="text-brand-500 font-bold text-3xl">₹{item.price.toFixed(0)}</span>
                   </div>
-                  <p className="text-gray-400 text-sm line-clamp-2 mb-6 leading-relaxed">{item.description}</p>
+                  <p className="text-gray-400 text-sm font-medium line-clamp-2 mb-8 leading-relaxed">{item.description}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1 text-gray-400 text-xs font-medium">
-                    <Clock className="w-3 h-3" />
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5 text-gray-400 text-[10px] font-black uppercase tracking-widest">
+                    <Clock className="w-3.5 h-3.5" />
                     20-30 min
                   </div>
-                  <div className="w-1 h-1 bg-gray-200 rounded-full" />
-                  <div className="text-gray-400 text-xs font-medium">Free Delivery</div>
+                  <div className="w-1 h-1 bg-brand-500/20 rounded-full" />
+                  <div className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Free Delivery</div>
                   <motion.button 
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => addToCart(item)}
-                    className="ml-auto bg-brand-900 text-white p-3 rounded-2xl shadow-lg shadow-brand-100 transition-all"
+                    className="ml-auto charcoal-gradient text-white p-4 rounded-2xl luxury-shadow transition-all"
                   >
                     <Plus className="w-6 h-6" />
                   </motion.button>

@@ -212,12 +212,12 @@ export default function DriverDashboard() {
 
   const stats = [
     { label: 'Deliveries', value: myOrders.filter(o => o.status === 'delivered').length, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50' },
-    { label: 'Earnings', value: `₹${(myOrders.filter(o => o.status === 'delivered').length * 10).toFixed(0)}`, icon: TrendingUp, color: 'text-orange-500', bg: 'bg-orange-50' },
-    { label: 'Active', value: myOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length, icon: ClipboardList, color: 'text-blue-500', bg: 'bg-blue-50' },
+    { label: 'Earnings', value: `₹${(myOrders.filter(o => o.status === 'delivered').length * 10).toFixed(0)}`, icon: TrendingUp, color: 'text-brand-500', bg: 'bg-brand-50' },
+    { label: 'Active', value: myOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length, icon: ClipboardList, color: 'text-brand-500', bg: 'bg-brand-50' },
   ];
 
   const renderDashboard = () => (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat, i) => (
           <motion.div
@@ -225,58 +225,58 @@ export default function DriverDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
             key={stat.label}
-            className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-4"
+            className="glass-luxury p-6 rounded-[2rem] luxury-shadow flex items-center gap-4 border border-brand-50"
           >
             <div className={cn("p-4 rounded-2xl", stat.bg)}>
               <stat.icon className={cn("w-6 h-6", stat.color)} />
             </div>
             <div>
-              <p className="text-sm text-gray-400 font-medium">{stat.label}</p>
-              <p className="text-2xl font-bold">{stat.value}</p>
+              <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{stat.label}</p>
+              <p className="text-2xl font-bold text-brand-900">{stat.value}</p>
             </div>
           </motion.div>
         ))}
       </div>
 
       <div className="space-y-6">
-        <h3 className="text-xl font-bold">Available Orders</h3>
+        <h3 className="text-xs font-black text-brand-900 uppercase tracking-[0.2em]">Available Orders</h3>
         {availableOrders.length === 0 ? (
-          <div className="bg-white p-12 rounded-3xl text-center border border-gray-100">
-            <Truck className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-            <p className="text-gray-400">No orders available right now.</p>
+          <div className="bg-white p-16 rounded-[2.5rem] text-center border border-brand-50 luxury-shadow">
+            <Truck className="w-16 h-16 text-brand-100 mx-auto mb-6" />
+            <p className="text-gray-400 font-medium">No orders available right now.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-6">
             {availableOrders.map((order) => (
-              <div key={order.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6">
+              <div key={order.id} className="bg-white p-8 rounded-[2.5rem] luxury-shadow border border-brand-50 flex flex-col md:flex-row justify-between items-center gap-8 group">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-orange-500 font-bold">#{order.id.slice(-6)}</span>
-                    <span className="px-2 py-1 bg-gray-100 text-gray-500 text-[10px] font-bold rounded uppercase">{order.status}</span>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-xs font-black text-brand-500 uppercase tracking-widest">#{order.id.slice(-6)}</span>
+                    <span className="px-3 py-1 bg-brand-50 text-brand-500 text-[10px] font-black rounded-full uppercase tracking-widest">{order.status}</span>
                   </div>
-                  <div className="flex items-start gap-2 group cursor-pointer" onClick={() => openInMaps(order.deliveryAddress)}>
-                    <MapPin className="w-4 h-4 text-gray-400 mt-1 group-hover:text-orange-500 transition-colors" />
+                  <div className="flex items-start gap-3 group cursor-pointer" onClick={() => openInMaps(order.deliveryAddress)}>
+                    <MapPin className="w-5 h-5 text-gray-300 mt-1 group-hover:text-brand-500 transition-colors" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium group-hover:text-orange-600 transition-colors underline decoration-dotted underline-offset-4">{order.deliveryAddress}</p>
+                      <p className="text-sm font-medium text-gray-600 group-hover:text-brand-900 transition-colors underline decoration-dotted underline-offset-8">{order.deliveryAddress}</p>
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-2 w-full md:w-auto">
+                <div className="flex gap-3 w-full md:w-auto">
                   {confirmAcceptId === order.id ? (
-                    <div className="flex gap-2 w-full">
+                    <div className="flex gap-3 w-full">
                       <button 
                         onClick={() => {
                           acceptOrder(order.id);
                           openInMaps(order.deliveryAddress);
                           setConfirmAcceptId(null);
                         }}
-                        className="flex-1 bg-green-500 text-white px-4 py-3 rounded-xl font-bold hover:bg-green-600 transition-all text-sm"
+                        className="flex-1 charcoal-gradient text-white px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest luxury-shadow"
                       >
                         Confirm Accept
                       </button>
                       <button 
                         onClick={() => setConfirmAcceptId(null)}
-                        className="flex-1 border border-gray-200 text-gray-400 px-4 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all text-sm"
+                        className="flex-1 bg-brand-50 text-gray-400 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-100 transition-all"
                       >
                         Cancel
                       </button>
@@ -285,13 +285,13 @@ export default function DriverDashboard() {
                     <>
                       <button 
                         onClick={() => setConfirmAcceptId(order.id)}
-                        className="flex-1 md:flex-none bg-orange-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-orange-600 transition-all"
+                        className="flex-1 md:flex-none charcoal-gradient text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest luxury-shadow"
                       >
                         Accept
                       </button>
                       <button 
                         onClick={() => toast.info('Order hidden from your view')}
-                        className="flex-1 md:flex-none border border-gray-200 text-gray-400 px-8 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all"
+                        className="flex-1 md:flex-none bg-brand-50 text-gray-400 px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-brand-100 transition-all"
                       >
                         Reject
                       </button>
@@ -307,38 +307,38 @@ export default function DriverDashboard() {
   );
 
   const renderMyOrders = () => (
-    <div className="space-y-6">
-      <h3 className="text-xl font-bold">My Active Deliveries</h3>
-      <div className="grid grid-cols-1 gap-6">
+    <div className="space-y-8">
+      <h3 className="text-xs font-black text-brand-900 uppercase tracking-[0.2em]">My Active Deliveries</h3>
+      <div className="grid grid-cols-1 gap-8">
         {myOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').map((order) => (
-          <div key={order.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-            <div className="flex justify-between items-start mb-6">
+          <div key={order.id} className="bg-white p-8 rounded-[3rem] luxury-shadow border border-brand-50">
+            <div className="flex justify-between items-start mb-8">
               <div>
-                <h4 className="font-bold text-lg">Order #{order.id.slice(-6)}</h4>
-                <div className="flex items-center gap-2 mt-1">
-                  <p className="text-sm text-gray-400">{order.items.length} items • ₹{order.totalAmount.toFixed(2)}</p>
+                <h4 className="font-serif text-2xl font-light text-brand-900 tracking-tight">Order #{order.id.slice(-6)}</h4>
+                <div className="flex items-center gap-2 mt-2">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{order.items.length} items • ₹{order.totalAmount.toFixed(0)}</p>
                 </div>
               </div>
-              <span className="px-3 py-1 bg-orange-100 text-orange-600 text-xs font-bold rounded-full uppercase">{order.status}</span>
+              <span className="px-4 py-1.5 bg-brand-50 text-brand-500 text-[10px] font-black rounded-full uppercase tracking-widest">{order.status.replace('_', ' ')}</span>
             </div>
             
-            <div className="space-y-4 mb-8">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <MapPin className="w-5 h-5 text-gray-400" />
+            <div className="space-y-5 mb-10">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-brand-50 rounded-2xl">
+                  <MapPin className="w-5 h-5 text-brand-500" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Delivery Address</p>
-                  <p className="font-medium">{order.deliveryAddress}</p>
+                  <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Delivery Address</p>
+                  <p className="text-sm font-medium text-gray-600">{order.deliveryAddress}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <Phone className="w-5 h-5 text-gray-400" />
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-brand-50 rounded-2xl">
+                  <Phone className="w-5 h-5 text-brand-500" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Customer Phone</p>
-                  <p className="font-medium">{order.customerPhone}</p>
+                  <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Customer Phone</p>
+                  <p className="text-sm font-medium text-gray-600">{order.customerPhone}</p>
                 </div>
               </div>
             </div>
@@ -346,7 +346,7 @@ export default function DriverDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button 
                 onClick={() => openInMaps(order.deliveryAddress)}
-                className="flex items-center justify-center gap-2 py-4 bg-blue-500 text-white rounded-2xl font-bold shadow-lg shadow-blue-100"
+                className="flex items-center justify-center gap-3 py-5 bg-brand-100 text-brand-900 rounded-2xl font-black text-[10px] uppercase tracking-widest luxury-shadow border border-brand-50"
               >
                 <Navigation className="w-5 h-5" />
                 Open Maps
@@ -355,7 +355,7 @@ export default function DriverDashboard() {
               {order.status === 'picked_up' ? (
                 <button 
                   onClick={() => updateOrderStatus(order.id, 'delivered')}
-                  className="flex items-center justify-center gap-2 py-4 bg-green-500 text-white rounded-2xl font-bold shadow-lg shadow-green-100"
+                  className="flex items-center justify-center gap-3 py-5 bg-green-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest luxury-shadow"
                 >
                   <CheckCircle2 className="w-5 h-5" />
                   Delivered
@@ -363,7 +363,7 @@ export default function DriverDashboard() {
               ) : (
                 <button 
                   onClick={() => updateOrderStatus(order.id, 'picked_up')}
-                  className="flex items-center justify-center gap-2 py-4 bg-orange-500 text-white rounded-2xl font-bold shadow-lg shadow-orange-100"
+                  className="flex items-center justify-center gap-3 py-5 charcoal-gradient text-white rounded-2xl font-black text-[10px] uppercase tracking-widest luxury-shadow"
                 >
                   <Truck className="w-5 h-5" />
                   Picked Up
@@ -377,49 +377,49 @@ export default function DriverDashboard() {
   );
 
   const renderProfile = () => (
-    <div className="space-y-8">
-      <h1 className="text-3xl font-bold">Driver Profile</h1>
-      <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 text-center">
-        <div className="w-24 h-24 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
-          <User className="w-12 h-12 text-orange-500" />
+    <div className="space-y-10">
+      <h1 className="text-3xl font-serif font-light text-brand-900 tracking-tight">Driver Profile</h1>
+      <div className="bg-white p-10 rounded-[3rem] luxury-shadow border border-brand-50 text-center">
+        <div className="w-32 h-32 rounded-[2.5rem] charcoal-gradient flex items-center justify-center mx-auto mb-6 luxury-shadow">
+          <User className="w-16 h-16 text-brand-500" />
         </div>
-        <h3 className="text-xl font-bold">{auth.currentUser?.displayName || 'Driver'}</h3>
-        <p className="text-gray-400 mb-8">{auth.currentUser?.email}</p>
+        <h3 className="text-2xl font-serif font-light text-brand-900 tracking-tight mb-1">{auth.currentUser?.displayName || 'Driver'}</h3>
+        <p className="text-[10px] font-black text-brand-500 uppercase tracking-widest mb-10">{auth.currentUser?.email}</p>
         
-        <div className="space-y-4">
-          <div className="p-6 bg-orange-50 rounded-3xl text-left space-y-4 border border-orange-100">
-            <div className="flex items-center gap-3 text-orange-900">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                <Info className="w-5 h-5" />
+        <div className="space-y-6">
+          <div className="p-8 bg-brand-50 rounded-[2.5rem] text-left space-y-5 border border-brand-50">
+            <div className="flex items-center gap-4 text-brand-900">
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center luxury-shadow">
+                <Info className="w-6 h-6 text-brand-500" />
               </div>
-              <h4 className="font-bold">About Easy Driver</h4>
+              <h4 className="text-xs font-black uppercase tracking-[0.2em]">About Easy Driver</h4>
             </div>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Part of the <strong>Home Made Food Delivery</strong> network. We empower local drivers to deliver fresh, home-cooked meals.
+            <p className="text-sm text-gray-400 leading-relaxed font-medium">
+              Part of the <strong className="text-brand-900">Home Made Food Delivery</strong> network. We empower local drivers to deliver fresh, home-cooked meals.
             </p>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <MapPin className="w-3 h-3" />
-                <span>Home Made Food Delivery, 123 Gourmet Lane, Foodie City</span>
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-2 text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                <MapPin className="w-3.5 h-3.5 text-brand-500" />
+                <span>Home Made Food Delivery, 123 Gourmet Lane</span>
               </div>
               <a 
                 href="https://whatsapp.com/channel/0029Vb7UGl90AgWJQzLO1M34" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center justify-between p-3 bg-white rounded-xl hover:bg-orange-100 transition-all group"
+                className="flex items-center justify-between p-4 bg-white rounded-2xl hover:bg-brand-100 transition-all group luxury-shadow"
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-sm font-bold text-orange-900">Driver Community</span>
+                  <span className="text-[10px] font-black text-brand-900 uppercase tracking-widest">Driver Community</span>
                 </div>
-                <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-orange-500" />
+                <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-brand-500" />
               </a>
             </div>
           </div>
 
           <button 
             onClick={() => signOut(auth)}
-            className="w-full flex items-center gap-3 p-4 text-red-500 font-bold hover:bg-red-50 rounded-2xl transition-all"
+            className="w-full flex items-center justify-center gap-3 p-5 text-red-400 font-black text-[10px] uppercase tracking-widest hover:bg-red-50 hover:text-red-500 rounded-2xl transition-all"
           >
             <LogOut className="w-5 h-5" />
             Logout
@@ -430,52 +430,55 @@ export default function DriverDashboard() {
   );
 
   const renderMessages = () => (
-    <div className="h-[calc(100vh-160px)] flex flex-col bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-          <User className="w-5 h-5 text-orange-500" />
+    <div className="h-[calc(100vh-200px)] flex flex-col bg-white rounded-[3rem] luxury-shadow border border-brand-50 overflow-hidden">
+      <div className="p-8 border-b border-brand-50 flex items-center gap-4 bg-brand-50/30">
+        <div className="w-12 h-12 rounded-2xl charcoal-gradient flex items-center justify-center luxury-shadow">
+          <User className="w-6 h-6 text-brand-500" />
         </div>
         <div>
-          <h4 className="font-bold">Admin Support</h4>
-          <p className="text-xs text-green-500 font-medium">Online</p>
+          <h4 className="font-serif text-xl font-light text-brand-900 tracking-tight">Admin Support</h4>
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+            <p className="text-[10px] text-green-500 font-black uppercase tracking-widest">Online</p>
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50">
+      <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-brand-100/30">
         {messages.map((msg) => (
           <div key={msg.id} className={cn(
-            "flex flex-col max-w-[80%]",
+            "flex flex-col max-w-[85%]",
             msg.senderId === auth.currentUser?.uid ? "ml-auto items-end" : "mr-auto items-start"
           )}>
             <div className={cn(
-              "px-4 py-2 rounded-2xl text-sm",
+              "px-6 py-4 rounded-[1.5rem] text-sm font-medium leading-relaxed luxury-shadow",
               msg.senderId === auth.currentUser?.uid 
-                ? "bg-orange-500 text-white rounded-tr-none" 
-                : "bg-white text-gray-700 border border-gray-100 rounded-tl-none"
+                ? "charcoal-gradient text-white rounded-tr-none" 
+                : "bg-white text-gray-600 border border-brand-50 rounded-tl-none"
             )}>
               {msg.text}
             </div>
-            <span className="text-[10px] text-gray-400 mt-1">
+            <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest mt-2 px-1">
               {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
         ))}
         {messages.length === 0 && (
-          <div className="text-center py-20 text-gray-400">
-            <MessageSquare className="w-12 h-12 mx-auto mb-2 opacity-20" />
-            <p>No messages with admin yet.</p>
+          <div className="text-center py-24 text-gray-300">
+            <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-10" />
+            <p className="text-[10px] font-black uppercase tracking-widest">No messages with admin yet.</p>
           </div>
         )}
       </div>
 
-      <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-100 flex gap-2">
+      <form onSubmit={handleSendMessage} className="p-6 bg-white border-t border-brand-50 flex gap-4">
         <input 
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           disabled={!hasActiveOrder}
           placeholder={hasActiveOrder ? "Type a message to admin..." : "Messaging disabled (no active delivery)"}
           className={cn(
-            "flex-1 px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 transition-all",
+            "flex-1 px-6 py-4 bg-brand-50 border border-brand-50 rounded-2xl outline-none focus:ring-1 focus:ring-brand-500/30 transition-all text-sm font-medium placeholder:text-gray-300",
             !hasActiveOrder && "opacity-50 cursor-not-allowed"
           )}
         />
@@ -483,8 +486,8 @@ export default function DriverDashboard() {
           type="submit"
           disabled={!hasActiveOrder}
           className={cn(
-            "bg-orange-500 text-white p-3 rounded-xl hover:bg-orange-600 shadow-lg shadow-orange-100 transition-all",
-            !hasActiveOrder && "opacity-50 cursor-not-allowed bg-gray-400 shadow-none"
+            "charcoal-gradient text-white p-4 rounded-2xl hover:scale-105 transition-all luxury-shadow",
+            !hasActiveOrder && "opacity-50 cursor-not-allowed bg-gray-200 shadow-none scale-100"
           )}
         >
           <ArrowRight className="w-6 h-6" />
@@ -494,7 +497,7 @@ export default function DriverDashboard() {
   );
 
   return (
-    <div className={cn("min-h-screen transition-colors duration-300", isDarkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900")}>
+    <div className={cn("min-h-screen transition-colors duration-300", isDarkMode ? "bg-gray-900 text-white" : "bg-brand-100 text-gray-900")}>
       {/* Success Tick Overlay */}
       <AnimatePresence>
         {showSuccessTick && (
@@ -502,7 +505,7 @@ export default function DriverDashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-white/80 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-brand-100/90 backdrop-blur-md"
           >
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
@@ -510,11 +513,11 @@ export default function DriverDashboard() {
               transition={{ type: "spring", damping: 12 }}
               className="flex flex-col items-center"
             >
-              <div className="w-32 h-32 bg-green-500 rounded-full flex items-center justify-center shadow-2xl shadow-green-200 mb-6">
-                <CheckCircle2 className="w-20 h-20 text-white" />
+              <div className="w-40 h-40 charcoal-gradient rounded-[3rem] flex items-center justify-center luxury-shadow mb-8">
+                <CheckCircle2 className="w-24 h-24 text-brand-500" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-900">Order Delivered!</h2>
-              <p className="text-gray-500 mt-2">Great job on your delivery.</p>
+              <h2 className="text-3xl font-serif font-light text-brand-900 tracking-tight">Order Delivered!</h2>
+              <p className="text-[10px] font-black text-brand-500 uppercase tracking-[0.3em] mt-4">Excellence in Service</p>
             </motion.div>
           </motion.div>
         )}
@@ -522,15 +525,18 @@ export default function DriverDashboard() {
 
       <div className="flex">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:flex flex-col w-64 h-screen sticky top-0 bg-white border-r border-gray-100 p-6">
-          <div className="flex items-center gap-3 mb-10">
-            <div className="bg-orange-500 p-2 rounded-xl">
+        <aside className="hidden lg:flex flex-col w-72 h-screen sticky top-0 bg-white border-r border-brand-50 p-8 luxury-shadow">
+          <div className="flex items-center gap-4 mb-12">
+            <div className="charcoal-gradient p-3 rounded-2xl luxury-shadow">
               <Truck className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight">Easy Driver</span>
+            <div className="flex flex-col">
+              <span className="text-xl font-serif font-bold tracking-tight text-brand-900">Easy Driver</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-500">Delivery Partner</span>
+            </div>
           </div>
 
-          <nav className="flex-1 space-y-2">
+          <nav className="flex-1 space-y-3">
             {[
               { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
               { id: 'orders', label: 'My Deliveries', icon: ClipboardList },
@@ -541,31 +547,33 @@ export default function DriverDashboard() {
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
                 className={cn(
-                  "w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all",
-                  activeTab === item.id ? "bg-orange-500 text-white shadow-lg shadow-orange-100" : "text-gray-500 hover:bg-gray-50"
+                  "w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all group",
+                  activeTab === item.id 
+                    ? "charcoal-gradient text-white luxury-shadow" 
+                    : "text-gray-400 hover:bg-brand-50 hover:text-brand-900"
                 )}
               >
-                <item.icon className="w-5 h-5" />
+                <item.icon className={cn("w-5 h-5 transition-colors", activeTab === item.id ? "text-brand-500" : "text-gray-300 group-hover:text-brand-500")} />
                 {item.label}
               </button>
             ))}
           </nav>
 
-          <button onClick={() => signOut(auth)} className="mt-auto flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-red-500 hover:bg-red-50 transition-all">
+          <button onClick={() => signOut(auth)} className="mt-auto flex items-center gap-4 px-5 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest text-red-400 hover:bg-red-50 hover:text-red-500 transition-all">
             <LogOut className="w-5 h-5" />
             Logout
           </button>
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-8 pb-24 lg:pb-8 max-w-4xl mx-auto">
+        <main className="flex-1 p-10 pb-32 lg:pb-10 max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.3 }}
             >
               {activeTab === 'dashboard' && renderDashboard()}
               {activeTab === 'orders' && renderMyOrders()}
@@ -576,7 +584,7 @@ export default function DriverDashboard() {
         </main>
 
         {/* Mobile Bottom Nav */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-white border-t border-gray-100 flex items-center justify-around px-6 z-40">
+        <nav className="lg:hidden fixed bottom-8 left-8 right-8 h-20 glass-luxury rounded-[2rem] flex items-center justify-around px-8 z-40 luxury-shadow border border-white/20">
           {[
             { id: 'dashboard', icon: LayoutDashboard },
             { id: 'orders', icon: ClipboardList },
@@ -587,8 +595,8 @@ export default function DriverDashboard() {
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className={cn(
-                "p-3 rounded-2xl transition-all",
-                activeTab === item.id ? "bg-orange-500 text-white shadow-lg shadow-orange-200" : "text-gray-400"
+                "p-4 rounded-2xl transition-all",
+                activeTab === item.id ? "charcoal-gradient text-white luxury-shadow scale-110" : "text-gray-400 hover:text-brand-900"
               )}
             >
               <item.icon className="w-6 h-6" />
