@@ -140,16 +140,6 @@ service cloud.firestore {
         (isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == resource.data.role) ||
         isAdmin()
       );
-
-      // User profile gallery photos
-      match /gallery/{photoId} {
-        allow read: if isAuthenticated();
-        allow create: if isOwner(userId) && 
-                        request.resource.data.url is string && 
-                        request.resource.data.url.size() < 1000 &&
-                        request.resource.data.createdAt == request.time;
-        allow delete: if isOwner(userId);
-      }
     }
 
     match /menu/{menuItemId} {

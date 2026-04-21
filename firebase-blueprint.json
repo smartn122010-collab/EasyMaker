@@ -127,18 +127,6 @@
       "schema": "User",
       "description": "User profiles"
     },
-    "/users/{userId}/gallery/{photoId}": {
-      "schema": {
-        "title": "GalleryPhoto",
-        "type": "object",
-        "properties": {
-          "url": { "type": "string", "format": "uri" },
-          "createdAt": { "type": "string", "format": "date-time" }
-        },
-        "required": ["url", "createdAt"]
-      },
-      "description": "User profile gallery photos"
-    },
     "/menu/{menuItemId}": {
       "schema": "MenuItem",
       "description": "Restaurant menu items"
