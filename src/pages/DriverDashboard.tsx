@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   ClipboardList,
   MessageSquare,
+  Send,
   ArrowRight,
   Info,
   ExternalLink
@@ -151,11 +152,6 @@ export default function DriverDashboard() {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !adminUser || !auth.currentUser) return;
-
-    if (!hasActiveOrder) {
-      toast.error("You can only message admin when you have an active delivery.");
-      return;
-    }
 
     try {
       await addDoc(collection(db, 'messages'), {
@@ -475,22 +471,14 @@ export default function DriverDashboard() {
         <input 
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          disabled={!hasActiveOrder}
-          placeholder={hasActiveOrder ? "Type a message to admin..." : "Messaging disabled (no active delivery)"}
-          className={cn(
-            "flex-1 px-6 py-4 bg-brand-50 border border-brand-50 rounded-2xl outline-none focus:ring-1 focus:ring-brand-500/30 transition-all text-sm font-medium placeholder:text-gray-300",
-            !hasActiveOrder && "opacity-50 cursor-not-allowed"
-          )}
+          placeholder="Type a message to admin..."
+          className="flex-1 px-6 py-4 bg-brand-50 border border-brand-50 rounded-2xl outline-none focus:ring-1 focus:ring-brand-500/30 transition-all text-sm font-medium placeholder:text-gray-300"
         />
         <button 
           type="submit"
-          disabled={!hasActiveOrder}
-          className={cn(
-            "charcoal-gradient text-white p-4 rounded-2xl hover:scale-105 transition-all luxury-shadow",
-            !hasActiveOrder && "opacity-50 cursor-not-allowed bg-gray-200 shadow-none scale-100"
-          )}
+          className="charcoal-gradient text-white p-4 rounded-2xl hover:scale-105 transition-all luxury-shadow group"
         >
-          <ArrowRight className="w-6 h-6" />
+          <Send className="w-5 h-5 text-brand-500 group-hover:scale-110 transition-transform" />
         </button>
       </form>
     </div>
