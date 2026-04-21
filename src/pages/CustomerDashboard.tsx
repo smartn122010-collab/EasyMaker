@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { auth, db } from '../lib/firebase';
-import { collection, query, onSnapshot, addDoc, doc, updateDoc, getDoc, where } from 'firebase/firestore';
+import { collection, query, onSnapshot, addDoc, doc, updateDoc, getDoc, where, orderBy } from 'firebase/firestore';
 import { 
   Search, 
   ShoppingBag, 
@@ -25,7 +25,9 @@ import {
   PhoneCall,
   Info,
   ExternalLink,
-  Truck
+  Truck,
+  Tag,
+  Ticket
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
@@ -93,12 +95,15 @@ export default function CustomerDashboard() {
   const [cart, setCart] = useState<any[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [shopStatus, setShopStatus] = useState<'open' | 'closed'>('open');
   const [searchQuery, setSearchQuery] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isLocating, setIsLocating] = useState(false);
   const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
   const [customerLocation, setCustomerLocation] = useState<[number, number] | null>(null);
+  const [userData, setUserData] = useState<any>(null);
   const prevStatuses = useRef<Record<string, string>>({});
 
   const trackingOrder = orders.find(o => o.id === trackingOrderId);
@@ -172,14 +177,29 @@ export default function CustomerDashboard() {
       console.error("Menu listener error:", error);
     });
 
+    const qCoupons = query(collection(db, 'coupons'), orderBy('createdAt', 'desc'));
+    const unsubCoupons = onSnapshot(qCoupons, (snapshot) => {
+      setCoupons(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
+    const unsubSettings = onSnapshot(doc(db, 'settings', 'store'), (doc) => {
+      if (doc.exists()) {
+        setShopStatus(doc.data().status || 'open');
+      }
+    });
+
     if (auth.currentUser) {
+      const unsubUser = onSnapshot(doc(db, 'users', auth.currentUser.uid), (doc) => {
+        setUserData(doc.data());
+      });
+
       const qOrders = query(collection(db, 'orders'), where('customerId', '==', auth.currentUser.uid));
       const unsubOrders = onSnapshot(qOrders, (snapshot) => {
         setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)));
       }, (error) => {
         console.error("Orders listener error:", error);
       });
-      return () => { unsubMenu(); unsubOrders(); };
+      return () => { unsubMenu(); unsubOrders(); unsubUser(); };
     }
 
     return () => unsubMenu();
@@ -210,6 +230,10 @@ export default function CustomerDashboard() {
 
   const placeOrder = async (address: string, phone: string) => {
     if (!auth.currentUser) return;
+    if (shopStatus === 'closed') {
+      toast.error("Shop is currently closed! Please try again later.");
+      return;
+    }
     try {
       const orderData = {
         customerId: auth.currentUser.uid,
@@ -240,6 +264,18 @@ export default function CustomerDashboard() {
 
   const renderHome = () => (
     <div className="space-y-10 pb-32">
+      {/* Shop Status Banner */}
+      {shopStatus === 'closed' && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-500 text-white p-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-red-200"
+        >
+          <Info className="w-5 h-5" />
+          <span className="text-xs font-black uppercase tracking-widest">Shop is currently Closed. Ordering is disabled.</span>
+        </motion.div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1.5">
@@ -251,21 +287,38 @@ export default function CustomerDashboard() {
             <span>Deliver to: Home • 123 Street</span>
           </div>
         </div>
-        <motion.button 
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            playNotificationSound();
-            toast("No new notifications", {
-              description: "We'll let you know when your order status changes.",
-              icon: <Bell className="w-4 h-4 text-brand-500" />
-            });
-          }}
-          className="w-14 h-14 rounded-2xl bg-white luxury-shadow flex items-center justify-center relative border border-brand-50"
-        >
-          <Bell className="w-6 h-6 text-gray-300" />
-          <span className="absolute top-4 right-4 w-2 h-2 bg-brand-500 rounded-full border-2 border-white" />
-        </motion.button>
+        <div className="flex items-center gap-3">
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              playNotificationSound();
+              toast.info("Welcome to Easy Maker!", {
+                description: "Check our new coupons in the your profile!",
+                icon: <Bell className="w-4 h-4 text-brand-500" />
+              });
+            }}
+            className="w-14 h-14 rounded-2xl bg-white luxury-shadow flex items-center justify-center relative border border-brand-50"
+          >
+            <Bell className="w-6 h-6 text-gray-300" />
+            <span className="absolute top-4 right-4 w-2 h-2 bg-brand-500 rounded-full border-2 border-white" />
+          </motion.button>
+          
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setActiveTab('profile')}
+            className="w-14 h-14 rounded-2xl bg-white luxury-shadow flex items-center justify-center overflow-hidden border border-brand-50"
+          >
+            {userData?.profilePicture ? (
+              <img src={userData.profilePicture} alt="Me" className="w-full h-full object-cover" />
+            ) : auth.currentUser?.photoURL ? (
+              <img src={auth.currentUser.photoURL} alt="Me" className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-6 h-6 text-gray-300" />
+            )}
+          </motion.button>
+        </div>
       </div>
 
       {/* Search & Filter */}
@@ -580,23 +633,44 @@ export default function CustomerDashboard() {
     </div>
   );
 
+  const handleUpdateProfilePicture = async () => {
+    if (!auth.currentUser) return;
+    const url = prompt("Please enter the direct URL for your profile picture:");
+    if (!url) return;
+    
+    try {
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        profilePicture: url,
+        updatedAt: new Date().toISOString()
+      });
+      toast.success("Profile picture updated!");
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
   const renderProfile = () => (
     <div className="space-y-8 pb-32">
       <h1 className="text-3xl font-bold text-brand-900">Settings</h1>
       <div className="bg-white p-8 rounded-[2.5rem] soft-shadow border border-gray-50 text-center">
         <div className="relative w-32 h-32 mx-auto mb-6">
           <div className="w-full h-full rounded-[2.5rem] bg-brand-50 flex items-center justify-center overflow-hidden border-4 border-white soft-shadow">
-            {auth.currentUser?.photoURL ? (
+            {userData?.profilePicture ? (
+              <img src={userData.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+            ) : auth.currentUser?.photoURL ? (
               <img src={auth.currentUser.photoURL} alt="Profile" className="w-full h-full object-cover" />
             ) : (
               <User className="w-16 h-16 text-brand-200" />
             )}
           </div>
-          <button className="absolute -bottom-2 -right-2 w-10 h-10 bg-brand-900 text-white rounded-2xl flex items-center justify-center shadow-lg">
+          <button 
+            onClick={handleUpdateProfilePicture}
+            className="absolute -bottom-2 -right-2 w-10 h-10 bg-brand-900 text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+          >
             <Plus className="w-5 h-5" />
           </button>
         </div>
-        <h3 className="text-2xl font-bold text-brand-900">{auth.currentUser?.displayName || 'Hungry User'}</h3>
+        <h3 className="text-2xl font-bold text-brand-900">{userData?.name || auth.currentUser?.displayName || 'Hungry User'}</h3>
         <p className="text-gray-400 mb-10">{auth.currentUser?.email}</p>
         
         <div className="space-y-3">
@@ -652,6 +726,49 @@ export default function CustomerDashboard() {
                 </div>
                 <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-brand-500" />
               </a>
+            </div>
+          </div>
+
+          {/* Coupon Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-serif font-light text-brand-900 tracking-tight">Available Coupons</h3>
+              <Ticket className="w-5 h-5 text-brand-500" />
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 scrollbar-hide">
+              {coupons.length > 0 ? coupons.map((coupon) => (
+                <motion.div 
+                  key={coupon.id}
+                  whileHover={{ scale: 1.02 }}
+                  className="flex-shrink-0 w-72 bg-white rounded-3xl luxury-shadow border border-brand-50 overflow-hidden"
+                >
+                  <div className="relative h-32">
+                    <img src={coupon.imageUrl} alt={coupon.code} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <div className="absolute top-3 right-3 bg-brand-500 text-white px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                      {coupon.discount}% OFF
+                    </div>
+                  </div>
+                  <div className="p-4 flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-brand-900">{coupon.code}</h4>
+                      <p className="text-[10px] text-gray-400 uppercase tracking-widest">{coupon.description}</p>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(coupon.code);
+                        toast.success("Coupon code copied!");
+                      }}
+                      className="charcoal-gradient text-white px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                </motion.div>
+              )) : (
+                <div className="w-full p-8 text-center bg-white rounded-3xl border border-dashed border-gray-200">
+                  <p className="text-sm text-gray-400">No coupons available right now.</p>
+                </div>
+              )}
             </div>
           </div>
 

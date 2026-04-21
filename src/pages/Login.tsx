@@ -71,6 +71,7 @@ export default function Login() {
             name,
             email,
             role: 'admin',
+            profilePicture: result.user.photoURL || null,
             easyMakerId: easyMakerId || null,
             createdAt: new Date().toISOString()
           });

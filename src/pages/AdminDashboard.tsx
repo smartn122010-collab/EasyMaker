@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import { db, auth } from '../lib/firebase';
+import { signOut } from 'firebase/auth';
 import { 
   collection, 
   query, 
@@ -9,6 +10,7 @@ import {
   updateDoc, 
   deleteDoc, 
   doc, 
+  setDoc,
   orderBy,
   where
 } from 'firebase/firestore';
@@ -30,7 +32,10 @@ import {
   Users,
   Send,
   Info,
-  ExternalLink
+  ExternalLink,
+  Tag,
+  Power,
+  User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
@@ -41,8 +46,11 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [drivers, setDrivers] = useState<any[]>([]);
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [shopStatus, setShopStatus] = useState<'open' | 'closed'>('open');
   const [selectedDriver, setSelectedDriver] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
+  const [userData, setUserData] = useState<any>(null);
   const [newMessage, setNewMessage] = useState('');
   const [showChatModal, setShowChatModal] = useState(false);
   const [confirmSendOrderId, setConfirmSendOrderId] = useState<string | null>(null);
@@ -53,6 +61,61 @@ export default function AdminDashboard() {
     notificationSound.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
   }, []);
   
+  // Coupon Form State
+  const [showCouponModal, setShowCouponModal] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<any>(null);
+  const [couponForm, setCouponForm] = useState({
+    code: '',
+    discount: '',
+    description: '',
+    imageUrl: 'https://picsum.photos/seed/coupon/400/300'
+  });
+
+  const toggleShopStatus = async () => {
+    const newStatus = shopStatus === 'open' ? 'closed' : 'open';
+    try {
+      await setDoc(doc(db, 'settings', 'store'), {
+        status: newStatus,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      toast.success(`Shop is now ${newStatus.toUpperCase()}`);
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleAddCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const data = {
+        ...couponForm,
+        discount: parseFloat(couponForm.discount),
+        createdAt: editingCoupon ? editingCoupon.createdAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      if (editingCoupon) {
+        await updateDoc(doc(db, 'coupons', editingCoupon.id), data);
+        toast.success('Coupon updated');
+      } else {
+        await addDoc(collection(db, 'coupons'), data);
+        toast.success('Coupon added');
+      }
+      setShowCouponModal(false);
+      setEditingCoupon(null);
+      setCouponForm({ code: '', discount: '', description: '', imageUrl: 'https://picsum.photos/seed/coupon/400/300' });
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleDeleteCoupon = async (id: string) => {
+    if (confirm('Delete this coupon?')) {
+      await deleteDoc(doc(db, 'coupons', id));
+      toast.success('Coupon deleted');
+    }
+  };
+
   // Menu Form State
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -64,6 +127,122 @@ export default function AdminDashboard() {
     category: 'Burgers',
     imageUrl: 'https://picsum.photos/seed/food/400/300'
   });
+
+  const renderCoupons = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-2xl font-bold text-brand-900">Manage Coupons</h3>
+          <p className="text-sm text-gray-400">Add discount codes for customers</p>
+        </div>
+        <button 
+          onClick={() => { setEditingCoupon(null); setCouponForm({ code: '', discount: '', description: '', imageUrl: 'https://picsum.photos/seed/coupon/400/300' }); setShowCouponModal(true); }}
+          className="bg-brand-500 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-brand-100 hover:bg-brand-600 transition-all"
+        >
+          <Plus className="w-5 h-5" />
+          Add Coupon
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {coupons.map((coupon) => (
+          <motion.div layout key={coupon.id} className="bg-white rounded-3xl luxury-shadow border border-gray-100 overflow-hidden group">
+            <div className="relative h-40">
+              <img src={coupon.imageUrl} alt={coupon.code} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <div className="absolute inset-0 bg-brand-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => { setEditingCoupon(coupon); setCouponForm({ ...coupon, discount: coupon.discount.toString() }); setShowCouponModal(true); }}
+                    className="p-3 bg-white rounded-xl text-brand-900 hover:scale-110 transition-transform"
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteCoupon(coupon.id)}
+                    className="p-3 bg-white rounded-xl text-red-500 hover:scale-110 transition-transform"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              <div className="absolute top-4 right-4 bg-brand-500 text-white px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest">
+                {coupon.discount}% OFF
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-2">
+                <h4 className="text-xl font-bold text-brand-900 font-serif tracking-tight">{coupon.code}</h4>
+              </div>
+              <p className="text-sm text-gray-500 line-clamp-2">{coupon.description}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Coupon Modal */}
+      <AnimatePresence>
+        {showCouponModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowCouponModal(false)}
+              className="absolute inset-0 bg-brand-900/40 backdrop-blur-sm" 
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-[2.5rem] w-full max-w-md p-10 relative z-10 shadow-2xl space-y-6"
+            >
+              <div>
+                <h3 className="text-2xl font-serif font-light text-brand-900 tracking-tight leading-tight">
+                  {editingCoupon ? 'Edit' : 'Create New'} <br />
+                  <span className="font-bold italic text-brand-500">Discount Coupon</span>
+                </h3>
+              </div>
+              <form onSubmit={handleAddCoupon} className="space-y-4">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest block mb-1">Coupon Code</label>
+                    <input 
+                      required value={couponForm.code} onChange={e => setCouponForm({...couponForm, code: e.target.value.toUpperCase()})}
+                      placeholder="e.g. SAVE50"
+                      className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-1 focus:ring-brand-500/30 outline-none text-sm font-bold placeholder:text-gray-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest block mb-1">Discount (%)</label>
+                    <input 
+                      required type="number" step="1" value={couponForm.discount} onChange={e => setCouponForm({...couponForm, discount: e.target.value})}
+                      placeholder="e.g. 20"
+                      className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-1 focus:ring-brand-500/30 outline-none text-sm font-bold placeholder:text-gray-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest block mb-1">Description</label>
+                    <textarea 
+                      required rows={2} value={couponForm.description} onChange={e => setCouponForm({...couponForm, description: e.target.value})}
+                      placeholder="Coupon details..."
+                      className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-1 focus:ring-brand-500/30 outline-none text-sm font-medium placeholder:text-gray-200 resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest block mb-1">Image URL</label>
+                    <input 
+                      required value={couponForm.imageUrl} onChange={e => setCouponForm({...couponForm, imageUrl: e.target.value})}
+                      className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-1 focus:ring-brand-500/30 outline-none text-xs font-medium text-gray-400"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-4 pt-4">
+                  <button type="button" onClick={() => setShowCouponModal(false)} className="flex-1 px-4 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest text-gray-400 bg-gray-50 hover:bg-gray-100 transition-all">Cancel</button>
+                  <button type="submit" className="flex-1 px-4 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest text-white charcoal-gradient shadow-lg transition-all">Save Coupon</button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   useEffect(() => {
     const qOrders = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
@@ -101,10 +280,31 @@ export default function AdminDashboard() {
       console.error("Admin drivers listener error:", error);
     });
 
+    const qCoupons = query(collection(db, 'coupons'), orderBy('createdAt', 'desc'));
+    const unsubCoupons = onSnapshot(qCoupons, (snapshot) => {
+      setCoupons(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
+    const unsubSettings = onSnapshot(doc(db, 'settings', 'store'), (doc) => {
+      if (doc.exists()) {
+        setShopStatus(doc.data().status || 'open');
+      }
+    });
+
+    let unsubUser = () => {};
+    if (auth.currentUser) {
+      unsubUser = onSnapshot(doc(db, 'users', auth.currentUser.uid), (doc) => {
+        setUserData(doc.data());
+      });
+    }
+
     return () => {
       unsubOrders();
       unsubMenu();
       unsubDrivers();
+      unsubUser();
+      unsubCoupons();
+      unsubSettings();
     };
   }, []);
 
@@ -203,8 +403,8 @@ export default function AdminDashboard() {
 
     const stats = [
       { label: 'Total Orders', value: orders.length, icon: ShoppingBag, color: 'text-brand-500', bg: 'bg-brand-50' },
-      { label: 'Delivered', value: deliveredOrders.length, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50' },
-      { label: 'Revenue', value: `₹${totalRevenue.toFixed(0)}`, icon: TrendingUp, color: 'text-brand-500', bg: 'bg-brand-50' },
+      { label: 'Total Revenue', value: `₹${totalRevenue.toFixed(0)}`, icon: TrendingUp, color: 'text-brand-500', bg: 'bg-brand-50' },
+      { label: 'Shop Status', value: shopStatus.toUpperCase(), icon: Power, color: shopStatus === 'open' ? 'text-green-500' : 'text-red-500', bg: shopStatus === 'open' ? 'bg-green-50' : 'bg-red-50', onClick: toggleShopStatus },
       { label: 'Cancelled', value: orders.filter(o => o.status === 'cancelled').length, icon: XCircle, color: 'text-red-500', bg: 'bg-red-50' },
     ];
 
@@ -217,14 +417,18 @@ export default function AdminDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               key={stat.label}
-              className="glass-luxury p-6 rounded-[2rem] luxury-shadow flex items-center gap-4"
+              onClick={stat.onClick}
+              className={cn(
+                "glass-luxury p-6 rounded-[2rem] luxury-shadow flex items-center gap-4 transition-all",
+                stat.onClick && "cursor-pointer active:scale-95 hover:bg-brand-50/50"
+              )}
             >
-              <div className={cn("p-4 rounded-2xl", stat.bg)}>
+              <div className={cn("p-4 rounded-2xl transition-colors", stat.bg)}>
                 <stat.icon className={cn("w-6 h-6", stat.color)} />
               </div>
               <div>
                 <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">{stat.label}</p>
-                <p className="text-2xl font-bold text-brand-900">{stat.value}</p>
+                <p className={cn("text-2xl font-bold transition-colors", stat.color)}>{stat.value}</p>
               </div>
             </motion.div>
           ))}
@@ -532,8 +736,12 @@ export default function AdminDashboard() {
         {drivers.map((driver) => (
           <div key={driver.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center">
-                <Truck className="w-8 h-8 text-orange-500" />
+              <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center overflow-hidden">
+                {driver.profilePicture ? (
+                  <img src={driver.profilePicture} alt={driver.name} className="w-full h-full object-cover" />
+                ) : (
+                  <Truck className="w-8 h-8 text-orange-500" />
+                )}
               </div>
               <div>
                 <h4 className="font-bold text-lg">{driver.name}</h4>
@@ -571,8 +779,12 @@ export default function AdminDashboard() {
             >
               <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-                    <Truck className="w-5 h-5 text-orange-500" />
+                  <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center overflow-hidden">
+                    {selectedDriver?.profilePicture ? (
+                      <img src={selectedDriver.profilePicture} alt="Driver" className="w-full h-full object-cover" />
+                    ) : (
+                      <Truck className="w-5 h-5 text-orange-500" />
+                    )}
                   </div>
                   <div>
                     <h4 className="font-bold">{selectedDriver.name}</h4>
@@ -683,6 +895,67 @@ export default function AdminDashboard() {
     </div>
   );
 
+  const handleUpdateProfilePicture = async () => {
+    if (!auth.currentUser) return;
+    const url = prompt("Please enter the direct URL for your profile picture:");
+    if (!url) return;
+    
+    try {
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        profilePicture: url,
+        updatedAt: new Date().toISOString()
+      });
+      toast.success("Profile picture updated!");
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const renderSettings = () => (
+    <div className="max-w-2xl mx-auto space-y-8">
+      <h1 className="text-3xl font-serif font-light text-brand-900 tracking-tight">Admin Settings</h1>
+      <div className="bg-white p-10 rounded-[3rem] luxury-shadow border border-brand-50 text-center">
+        <div className="relative w-32 h-32 mx-auto mb-6">
+          <div className="w-full h-full rounded-[2.5rem] charcoal-gradient flex items-center justify-center overflow-hidden luxury-shadow border-4 border-white">
+            {userData?.profilePicture ? (
+              <img src={userData.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+            ) : auth.currentUser?.photoURL ? (
+              <img src={auth.currentUser.photoURL} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-16 h-16 text-brand-500" />
+            )}
+          </div>
+          <button 
+            onClick={handleUpdateProfilePicture}
+            className="absolute -bottom-2 -right-2 w-10 h-10 bg-brand-500 text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+          >
+            <Plus className="w-5 h-5 text-brand-900" />
+          </button>
+        </div>
+        <h3 className="text-2xl font-serif font-light text-brand-900 tracking-tight mb-1">{userData?.name || auth.currentUser?.displayName || 'Admin'}</h3>
+        <p className="text-[10px] font-black text-brand-500 uppercase tracking-widest mb-10">{auth.currentUser?.email}</p>
+        
+        <div className="space-y-4">
+          <div className="p-6 bg-brand-50 rounded-2xl text-left border border-brand-50">
+            <h4 className="text-xs font-black uppercase tracking-widest mb-2 text-brand-900">Admin Account Info</h4>
+            <div className="space-y-1">
+               <p className="text-sm font-medium text-gray-500">Role: Administrator</p>
+               <p className="text-sm font-medium text-gray-500">Admin ID: {userData?.easyMakerId || 'N/A'}</p>
+               <p className="text-sm font-medium text-gray-500">Member Since: {new Date(userData?.createdAt).toLocaleDateString()}</p>
+            </div>
+          </div>
+          
+          <button 
+            onClick={() => signOut(auth)}
+            className="w-full bg-red-50 text-red-500 font-black text-[10px] uppercase tracking-widest py-4 rounded-2xl hover:bg-red-100 transition-all"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderAbout = () => (
     <div className="max-w-2xl mx-auto space-y-8">
       <div className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 text-center space-y-6">
@@ -751,6 +1024,8 @@ export default function AdminDashboard() {
           {activeTab === 'orders' && renderOrders()}
           {activeTab === 'dispatch' && renderDispatch()}
           {activeTab === 'drivers' && renderDrivers()}
+          {activeTab === 'coupons' && renderCoupons()}
+          {activeTab === 'settings' && renderSettings()}
           {activeTab === 'about' && renderAbout()}
           {activeTab === 'users' && (
             <div className="bg-white p-12 rounded-3xl text-center border border-gray-100">

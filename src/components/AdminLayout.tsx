@@ -16,10 +16,13 @@ import {
   Sun,
   User,
   Send,
-  Info
+  Info,
+  Settings,
+  ShoppingBag
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 interface SidebarItem {
   id: string;
@@ -34,14 +37,26 @@ const sidebarItems: SidebarItem[] = [
   { id: 'orders', label: 'Order Receive', icon: ClipboardList },
   { id: 'dispatch', label: 'Send Order', icon: Send },
   { id: 'drivers', label: 'Delivery Driver', icon: Truck },
+  { id: 'coupons', label: 'Coupn Manage', icon: ShoppingBag },
   { id: 'users', label: 'User Section', icon: Users },
+  { id: 'settings', label: 'Settings', icon: Settings },
   { id: 'about', label: 'About Us', icon: Info },
 ];
 
 export default function AdminLayout({ children, activeTab, setActiveTab }: { children: React.ReactNode, activeTab: string, setActiveTab: (tab: string) => void }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (auth.currentUser) {
+      const unsub = onSnapshot(doc(db, 'users', auth.currentUser.uid), (doc) => {
+        setUserData(doc.data());
+      });
+      return () => unsub();
+    }
+  }, []);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -92,12 +107,18 @@ export default function AdminLayout({ children, activeTab, setActiveTab }: { chi
           </nav>
 
           <div className="mt-auto pt-8 border-t border-brand-50">
-            <div className="flex items-center gap-4 mb-8 p-4 rounded-2xl bg-brand-50/50 border border-brand-50">
-               <div className="w-12 h-12 rounded-2xl charcoal-gradient flex items-center justify-center luxury-shadow">
-                  <User className="w-6 h-6 text-brand-500" />
+            <div className="flex items-center gap-4 mb-8 p-4 rounded-2xl bg-brand-50/50 border border-brand-50 cursor-pointer hover:bg-brand-50 transition-colors" onClick={() => setActiveTab('settings')}>
+               <div className="w-12 h-12 rounded-2xl charcoal-gradient flex items-center justify-center luxury-shadow overflow-hidden">
+                  {userData?.profilePicture ? (
+                    <img src={userData.profilePicture} alt="Admin" className="w-full h-full object-cover" />
+                  ) : auth.currentUser?.photoURL ? (
+                    <img src={auth.currentUser.photoURL} alt="Admin" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-6 h-6 text-brand-500" />
+                  )}
                </div>
                <div className="flex-1 min-w-0">
-                 <p className="text-sm font-bold text-brand-900 truncate">{auth.currentUser?.displayName || 'Admin'}</p>
+                 <p className="text-sm font-bold text-brand-900 truncate">{userData?.name || auth.currentUser?.displayName || 'Admin'}</p>
                  <p className="text-[10px] font-black text-brand-500 uppercase tracking-widest truncate">Administrator</p>
                </div>
             </div>

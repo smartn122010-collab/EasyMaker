@@ -22,6 +22,7 @@ export default function RoleSelection() {
         name: auth.currentUser.displayName || 'User',
         email: auth.currentUser.email,
         role: selectedRole,
+        profilePicture: auth.currentUser.photoURL || null,
         createdAt: new Date().toISOString()
       }, { merge: true });
       

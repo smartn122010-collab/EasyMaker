@@ -93,6 +93,31 @@
         "timestamp": { "type": "string", "format": "date-time" }
       },
       "required": ["senderId", "receiverId", "participants", "text", "timestamp"]
+    },
+    "Coupon": {
+      "title": "Coupon",
+      "description": "Discount coupons for customers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "discount": { "type": "number" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["code", "discount"]
+    },
+    "StoreSettings": {
+      "title": "StoreSettings",
+      "description": "Global store configuration",
+      "type": "object",
+      "properties": {
+        "status": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["status"]
     }
   },
   "firestore": {
@@ -111,6 +136,14 @@
     "/messages/{messageId}": {
       "schema": "Message",
       "description": "Admin-Driver chat messages"
+    },
+    "/coupons/{couponId}": {
+      "schema": "Coupon",
+      "description": "Discount codes"
+    },
+    "/settings/{settingId}": {
+      "schema": "StoreSettings",
+      "description": "Store-wide settings"
     }
   }
 }
