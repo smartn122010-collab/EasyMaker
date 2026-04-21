@@ -129,9 +129,13 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteCoupon = async (id: string) => {
-    if (confirm('Delete this coupon?')) {
-      await deleteDoc(doc(db, 'coupons', id));
-      toast.success('Coupon deleted');
+    try {
+      if (confirm('Delete this coupon?')) {
+        await deleteDoc(doc(db, 'coupons', id));
+        toast.success('Coupon deleted');
+      }
+    } catch (error: any) {
+      toast.error('Failed to delete coupon: ' + error.message);
     }
   };
 
@@ -168,19 +172,33 @@ export default function AdminDashboard() {
           <motion.div layout key={coupon.id} className="bg-white rounded-[2.5rem] luxury-shadow border border-brand-50 overflow-hidden group hover:-translate-y-1 transition-all duration-500">
             <div className="relative h-44 overflow-hidden">
               <EasyMakerLogo />
-              <div className="absolute inset-0 bg-brand-900/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 backdrop-blur-[2px]">
-                <div className="flex gap-4">
+              <div className="absolute inset-0 bg-brand-900/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 backdrop-blur-[2px] z-10">
+                <div className="flex gap-4 relative z-20">
                   <button 
-                    onClick={() => { setEditingCoupon(coupon); setCouponForm({ code: coupon.code, discount: coupon.discount.toString(), description: coupon.description }); setShowCouponModal(true); }}
+                    type="button"
+                    onClick={(e) => { 
+                      e.stopPropagation();
+                      setEditingCoupon(coupon); 
+                      setCouponForm({ 
+                        code: coupon.code, 
+                        discount: coupon.discount?.toString() || '0', 
+                        description: coupon.description || '' 
+                      }); 
+                      setShowCouponModal(true); 
+                    }}
                     className="p-4 bg-white rounded-2xl text-brand-900 hover:scale-110 active:scale-95 transition-all shadow-xl"
                   >
-                    <Edit2 className="w-5 h-5" />
+                    <Edit2 className="w-5 h-5 pointer-events-none" />
                   </button>
                   <button 
-                    onClick={() => handleDeleteCoupon(coupon.id)}
+                    type="button"
+                    onClick={(e) => { 
+                      e.stopPropagation();
+                      handleDeleteCoupon(coupon.id);
+                    }}
                     className="p-4 bg-white rounded-2xl text-red-500 hover:scale-110 active:scale-95 transition-all shadow-xl"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <Trash2 className="w-5 h-5 pointer-events-none" />
                   </button>
                 </div>
               </div>
