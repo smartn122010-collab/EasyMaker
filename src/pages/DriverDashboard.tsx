@@ -411,32 +411,130 @@ export default function DriverDashboard() {
     }
   };
 
-  const renderProfile = () => (
-    <div className="space-y-10">
-      <h1 className="text-3xl font-serif font-light text-brand-900 tracking-tight">Driver Profile</h1>
-      <div className="bg-white p-10 rounded-[3rem] luxury-shadow border border-brand-50 text-center">
-        <div className="relative w-32 h-32 mx-auto mb-6">
-          <div className="w-full h-full rounded-[2.5rem] charcoal-gradient flex items-center justify-center overflow-hidden luxury-shadow border-4 border-white">
-            {userData?.profilePicture ? (
-              <img src={userData.profilePicture} alt="Profile" className="w-full h-full object-cover" />
-            ) : auth.currentUser?.photoURL ? (
-              <img src={auth.currentUser.photoURL} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              <User className="w-16 h-16 text-brand-500" />
-            )}
+  const [showGallery, setShowGallery] = useState(false);
+  const [galleryImages, setGalleryImages] = useState([
+    'https://picsum.photos/seed/delivery1/400/300',
+    'https://picsum.photos/seed/delivery2/400/300',
+    'https://picsum.photos/seed/delivery3/400/300',
+    'https://picsum.photos/seed/delivery4/400/300',
+  ]);
+
+  const handleAddGalleryPhoto = () => {
+    const url = prompt("Enter Image URL for Gallery:");
+    if (url) {
+      setGalleryImages([url, ...galleryImages]);
+      toast.success("Photo added to gallery!");
+    }
+  };
+
+  const renderProfile = () => {
+    const deliveredOrders = myOrders.filter(o => o.status === 'delivered')
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 5);
+
+    return (
+      <div className="space-y-10">
+        <h1 className="text-3xl font-serif font-light text-brand-900 tracking-tight">Driver Profile</h1>
+        <div className="bg-white p-10 rounded-[3rem] luxury-shadow border border-brand-50 text-center">
+          <div className="relative w-32 h-32 mx-auto mb-6">
+            <div className="w-full h-full rounded-[2.5rem] charcoal-gradient flex items-center justify-center overflow-hidden luxury-shadow border-4 border-white">
+              {userData?.profilePicture ? (
+                <img src={userData.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+              ) : auth.currentUser?.photoURL ? (
+                <img src={auth.currentUser.photoURL} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-16 h-16 text-brand-500" />
+              )}
+            </div>
+            <button 
+              onClick={handleUpdateProfilePicture}
+              className="absolute -bottom-2 -right-2 w-10 h-10 bg-brand-500 text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+            >
+              <Plus className="w-5 h-5 text-brand-900" />
+            </button>
           </div>
-          <button 
-            onClick={handleUpdateProfilePicture}
-            className="absolute -bottom-2 -right-2 w-10 h-10 bg-brand-500 text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-          >
-            <Plus className="w-5 h-5 text-brand-900" />
-          </button>
-        </div>
-        <h3 className="text-2xl font-serif font-light text-brand-900 tracking-tight mb-1">{userData?.name || auth.currentUser?.displayName || 'Driver'}</h3>
-        <p className="text-[10px] font-black text-brand-500 uppercase tracking-widest mb-10">{auth.currentUser?.email}</p>
-        
-        <div className="space-y-6">
-          <div className="p-8 bg-brand-50 rounded-[2.5rem] text-left space-y-5 border border-brand-50">
+          <h3 className="text-2xl font-serif font-light text-brand-900 tracking-tight mb-1">{userData?.name || auth.currentUser?.displayName || 'Driver'}</h3>
+          <p className="text-[10px] font-black text-brand-500 uppercase tracking-widest mb-10">{auth.currentUser?.email}</p>
+          
+          <div className="space-y-6">
+            {/* Gallery Section */}
+            <div className="text-left space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-[10px] font-black text-brand-900 uppercase tracking-widest">Delivery Gallery</h4>
+                  <button 
+                    onClick={handleAddGalleryPhoto}
+                    className="w-6 h-6 bg-brand-50 text-brand-500 rounded-lg flex items-center justify-center hover:bg-brand-500 hover:text-white transition-all shadow-sm"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <button 
+                  onClick={() => setShowGallery(!showGallery)}
+                  className="text-[10px] font-black text-brand-500 uppercase tracking-widest hover:underline"
+                >
+                  {showGallery ? "Hide" : "View All"}
+                </button>
+              </div>
+              <AnimatePresence>
+                {showGallery && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="grid grid-cols-2 gap-4 overflow-hidden"
+                  >
+                    {galleryImages.map((img, i) => (
+                      <motion.div 
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: i * 0.1 }}
+                        key={i} 
+                        className="aspect-[4/3] rounded-2xl overflow-hidden luxury-shadow bg-gray-100"
+                      >
+                        <img src={img} alt="Gallery" className="w-full h-full object-cover" />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              {!showGallery && (
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                  {galleryImages.map((img, i) => (
+                    <div key={i} className="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden luxury-shadow border border-white">
+                      <img src={img} alt="Gallery" className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent History Section */}
+            <div className="text-left space-y-4 pt-4">
+              <h4 className="text-[10px] font-black text-brand-900 uppercase tracking-widest">Recent Success</h4>
+              <div className="space-y-3">
+                {deliveredOrders.length > 0 ? deliveredOrders.map((order) => (
+                  <div key={order.id} className="p-4 bg-brand-50 rounded-2xl border border-brand-100 flex items-center justify-between group hover:bg-white hover:luxury-shadow transition-all">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-green-500 luxury-shadow group-hover:scale-110 transition-transform">
+                        <CheckCircle2 className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-brand-900">Order #{order.id.slice(-6)}</p>
+                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
+                          {new Date(order.updatedAt).toLocaleDateString()} • ₹{order.totalAmount.toFixed(0)}
+                        </p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-brand-500 transition-colors" />
+                  </div>
+                )) : (
+                  <p className="text-xs text-gray-400 text-center py-4 italic">No successful deliveries yet.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="p-8 bg-brand-50 rounded-[2.5rem] text-left space-y-5 border border-brand-50">
             <div className="flex items-center gap-4 text-brand-900">
               <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center luxury-shadow">
                 <Info className="w-6 h-6 text-brand-500" />
@@ -477,6 +575,7 @@ export default function DriverDashboard() {
       </div>
     </div>
   );
+};
 
   const renderMessages = () => (
     <div className="h-[calc(100vh-200px)] flex flex-col bg-white rounded-[3rem] luxury-shadow border border-brand-50 overflow-hidden">

@@ -308,6 +308,23 @@ export default function CustomerDashboard() {
     return matchesSearch && matchesCategory;
   });
 
+  const [galleryImages, setGalleryImages] = useState([
+    'https://picsum.photos/seed/dish1/300/300',
+    'https://picsum.photos/seed/dish2/300/300',
+    'https://picsum.photos/seed/dish3/300/300',
+    'https://picsum.photos/seed/dish4/300/300',
+    'https://picsum.photos/seed/dish5/300/300',
+    'https://picsum.photos/seed/dish6/300/300',
+  ]);
+
+  const handleAddGalleryPhoto = () => {
+    const url = prompt("Enter Image URL for Gallery:");
+    if (url) {
+      setGalleryImages([url, ...galleryImages]);
+      toast.success("Photo added to gallery!");
+    }
+  };
+
   const renderHome = () => (
     <div className="space-y-10 pb-32">
       {/* Shop Status Banner */}
@@ -843,6 +860,30 @@ export default function CustomerDashboard() {
                 </div>
                 <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-brand-500" />
               </a>
+            </div>
+          </div>
+
+          {/* Food Gallery Section */}
+          <div className="space-y-4 text-left">
+            <div className="flex items-center justify-between px-2">
+              <h3 className="text-xl font-serif font-light text-brand-900 tracking-tight italic">Dining Gallery</h3>
+              <button 
+                onClick={handleAddGalleryPhoto}
+                className="w-8 h-8 bg-brand-50 rounded-lg flex items-center justify-center hover:bg-brand-900 hover:text-white transition-all shadow-sm"
+              >
+                 <Plus className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {galleryImages.map((img, i) => (
+                <motion.div 
+                  key={i}
+                  whileHover={{ scale: 0.98 }}
+                  className="aspect-square rounded-2xl overflow-hidden soft-shadow bg-gray-100 border-2 border-white"
+                >
+                  <img src={img} alt="Dish" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                </motion.div>
+              ))}
             </div>
           </div>
 
