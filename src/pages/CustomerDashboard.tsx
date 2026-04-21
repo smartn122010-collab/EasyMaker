@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { auth, db } from '../lib/firebase';
-import { collection, query, onSnapshot, addDoc, doc, updateDoc, getDoc, where, orderBy } from 'firebase/firestore';
+import { collection, query, onSnapshot, addDoc, doc, updateDoc, getDoc, where, orderBy, limit } from 'firebase/firestore';
 import { 
   Search, 
   ShoppingBag, 
@@ -308,20 +308,34 @@ export default function CustomerDashboard() {
     return matchesSearch && matchesCategory;
   });
 
-  const [galleryImages, setGalleryImages] = useState([
-    'https://picsum.photos/seed/dish1/300/300',
-    'https://picsum.photos/seed/dish2/300/300',
-    'https://picsum.photos/seed/dish3/300/300',
-    'https://picsum.photos/seed/dish4/300/300',
-    'https://picsum.photos/seed/dish5/300/300',
-    'https://picsum.photos/seed/dish6/300/300',
-  ]);
+  const [galleryImages, setGalleryImages] = useState<any[]>([]);
 
-  const handleAddGalleryPhoto = () => {
+  useEffect(() => {
+    if (!auth.currentUser) return;
+    const q = query(
+      collection(db, 'users', auth.currentUser.uid, 'gallery'),
+      orderBy('createdAt', 'desc'),
+      limit(24)
+    );
+    const unsub = onSnapshot(q, (snapshot) => {
+      setGalleryImages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsub();
+  }, []);
+
+  const handleAddGalleryPhoto = async () => {
+    if (!auth.currentUser) return;
     const url = prompt("Enter Image URL for Gallery:");
     if (url) {
-      setGalleryImages([url, ...galleryImages]);
-      toast.success("Photo added to gallery!");
+      try {
+        await addDoc(collection(db, 'users', auth.currentUser.uid, 'gallery'), {
+          url,
+          createdAt: new Date().toISOString()
+        });
+        toast.success("Photo added to gallery!");
+      } catch (error: any) {
+        toast.error("Failed to add photo: " + error.message);
+      }
     }
   };
 
@@ -877,13 +891,21 @@ export default function CustomerDashboard() {
             <div className="grid grid-cols-3 gap-3">
               {galleryImages.map((img, i) => (
                 <motion.div 
-                  key={i}
+                  key={img.id || i}
                   whileHover={{ scale: 0.98 }}
                   className="aspect-square rounded-2xl overflow-hidden soft-shadow bg-gray-100 border-2 border-white"
                 >
-                  <img src={img} alt="Dish" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={img.url} alt="Dish" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </motion.div>
               ))}
+              {galleryImages.length === 0 && (
+                <div className="col-span-3 py-10 bg-white rounded-3xl border border-dashed border-gray-100 flex flex-col items-center justify-center gap-2">
+                   <div className="w-12 h-12 bg-brand-50 rounded-full flex items-center justify-center">
+                      <Plus className="w-6 h-6 text-brand-300" />
+                   </div>
+                   <p className="text-[10px] text-gray-300 font-black uppercase tracking-widest">Share your food experience</p>
+                </div>
+              )}
             </div>
           </div>
 

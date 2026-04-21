@@ -412,25 +412,44 @@ export default function DriverDashboard() {
   };
 
   const [showGallery, setShowGallery] = useState(false);
-  const [galleryImages, setGalleryImages] = useState([
-    'https://picsum.photos/seed/delivery1/400/300',
-    'https://picsum.photos/seed/delivery2/400/300',
-    'https://picsum.photos/seed/delivery3/400/300',
-    'https://picsum.photos/seed/delivery4/400/300',
-  ]);
+  const [galleryImages, setGalleryImages] = useState<any[]>([]);
 
-  const handleAddGalleryPhoto = () => {
+  useEffect(() => {
+    if (!auth.currentUser) return;
+    const q = query(
+      collection(db, 'users', auth.currentUser.uid, 'gallery'),
+      orderBy('createdAt', 'desc'),
+      limit(20)
+    );
+    const unsub = onSnapshot(q, (snapshot) => {
+      setGalleryImages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsub();
+  }, []);
+
+  const handleAddGalleryPhoto = async () => {
+    if (!auth.currentUser) return;
     const url = prompt("Enter Image URL for Gallery:");
     if (url) {
-      setGalleryImages([url, ...galleryImages]);
-      toast.success("Photo added to gallery!");
+      try {
+        await addDoc(collection(db, 'users', auth.currentUser.uid, 'gallery'), {
+          url,
+          createdAt: new Date().toISOString()
+        });
+        toast.success("Photo added to gallery!");
+      } catch (error: any) {
+        toast.error("Failed to add photo: " + error.message);
+      }
     }
   };
 
+  const [showFullHistory, setShowFullHistory] = useState(false);
+
   const renderProfile = () => {
-    const deliveredOrders = myOrders.filter(o => o.status === 'delivered')
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-      .slice(0, 5);
+    const allSuccessful = myOrders.filter(o => o.status === 'delivered')
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    
+    const deliveredOrders = showFullHistory ? allSuccessful : allSuccessful.slice(0, 5);
 
     return (
       <div className="space-y-10">
@@ -473,11 +492,11 @@ export default function DriverDashboard() {
                   onClick={() => setShowGallery(!showGallery)}
                   className="text-[10px] font-black text-brand-500 uppercase tracking-widest hover:underline"
                 >
-                  {showGallery ? "Hide" : "View All"}
+                  {showGallery ? "Hide" : galleryImages.length > 4 ? "View All" : ""}
                 </button>
               </div>
-              <AnimatePresence>
-                {showGallery && (
+              <AnimatePresence mode="wait">
+                {showGallery ? (
                   <motion.div 
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
@@ -489,29 +508,54 @@ export default function DriverDashboard() {
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: i * 0.1 }}
-                        key={i} 
-                        className="aspect-[4/3] rounded-2xl overflow-hidden luxury-shadow bg-gray-100"
+                        key={img.id || i} 
+                        className="aspect-[4/3] rounded-2xl overflow-hidden luxury-shadow bg-gray-100 group relative"
                       >
-                        <img src={img} alt="Gallery" className="w-full h-full object-cover" />
+                        <img src={img.url} alt="Gallery" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                           <span className="text-[8px] text-white font-black uppercase tracking-widest">{new Date(img.createdAt).toLocaleDateString()}</span>
+                        </div>
                       </motion.div>
                     ))}
+                    {galleryImages.length === 0 && (
+                      <p className="col-span-2 text-[10px] text-gray-400 text-center py-8 italic font-medium uppercase tracking-widest">No photos shared yet.</p>
+                    )}
+                  </motion.div>
+                ) : (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex gap-2 overflow-x-auto scrollbar-hide"
+                  >
+                    {galleryImages.slice(0, 5).map((img, i) => (
+                      <div key={img.id || i} className="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden luxury-shadow border border-white">
+                        <img src={img.url} alt="Gallery" className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                    {galleryImages.length === 0 && (
+                      <div className="w-full p-6 bg-brand-50 rounded-2xl border border-dashed border-brand-200 flex flex-col items-center justify-center gap-2">
+                        <Plus className="w-4 h-4 text-brand-300" />
+                        <p className="text-[8px] text-brand-300 font-black uppercase tracking-widest">Add your first photo</p>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
-              {!showGallery && (
-                <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-                  {galleryImages.map((img, i) => (
-                    <div key={i} className="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden luxury-shadow border border-white">
-                      <img src={img} alt="Gallery" className="w-full h-full object-cover" />
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Recent History Section */}
             <div className="text-left space-y-4 pt-4">
-              <h4 className="text-[10px] font-black text-brand-900 uppercase tracking-widest">Recent Success</h4>
+              <div className="flex items-center justify-between">
+                <h4 className="text-[10px] font-black text-brand-900 uppercase tracking-widest">Recent Success</h4>
+                {allSuccessful.length > 5 && (
+                  <button 
+                    onClick={() => setShowFullHistory(!showFullHistory)}
+                    className="text-[10px] font-black text-brand-500 uppercase tracking-widest hover:underline"
+                  >
+                    {showFullHistory ? "Show Less" : "View Full"}
+                  </button>
+                )}
+              </div>
               <div className="space-y-3">
                 {deliveredOrders.length > 0 ? deliveredOrders.map((order) => (
                   <div key={order.id} className="p-4 bg-brand-50 rounded-2xl border border-brand-100 flex items-center justify-between group hover:bg-white hover:luxury-shadow transition-all">
@@ -521,9 +565,10 @@ export default function DriverDashboard() {
                       </div>
                       <div>
                         <p className="text-xs font-bold text-brand-900">Order #{order.id.slice(-6)}</p>
-                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
+                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest leading-none mt-0.5">
                           {new Date(order.updatedAt).toLocaleDateString()} • ₹{order.totalAmount.toFixed(0)}
                         </p>
+                        <p className="text-[8px] text-brand-500 italic mt-1">{order.deliveryAddress.split(',')[0]}</p>
                       </div>
                     </div>
                     <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-brand-500 transition-colors" />
