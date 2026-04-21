@@ -67,8 +67,7 @@ export default function AdminDashboard() {
   const [couponForm, setCouponForm] = useState({
     code: '',
     discount: '',
-    description: '',
-    imageUrl: 'https://picsum.photos/seed/coupon/400/300'
+    description: ''
   });
 
   const toggleShopStatus = async () => {
@@ -90,6 +89,7 @@ export default function AdminDashboard() {
       const data = {
         ...couponForm,
         discount: parseFloat(couponForm.discount),
+        imageUrl: 'https://picsum.photos/seed/easymaker-logo/400/300', // Branded EasyMaker Logo
         createdAt: editingCoupon ? editingCoupon.createdAt : new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
       }
       setShowCouponModal(false);
       setEditingCoupon(null);
-      setCouponForm({ code: '', discount: '', description: '', imageUrl: 'https://picsum.photos/seed/coupon/400/300' });
+      setCouponForm({ code: '', discount: '', description: '' });
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -136,7 +136,7 @@ export default function AdminDashboard() {
           <p className="text-sm text-gray-400">Add discount codes for customers</p>
         </div>
         <button 
-          onClick={() => { setEditingCoupon(null); setCouponForm({ code: '', discount: '', description: '', imageUrl: 'https://picsum.photos/seed/coupon/400/300' }); setShowCouponModal(true); }}
+          onClick={() => { setEditingCoupon(null); setCouponForm({ code: '', discount: '', description: '' }); setShowCouponModal(true); }}
           className="bg-brand-500 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-brand-100 hover:bg-brand-600 transition-all"
         >
           <Plus className="w-5 h-5" />
@@ -152,7 +152,7 @@ export default function AdminDashboard() {
               <div className="absolute inset-0 bg-brand-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <div className="flex gap-2">
                   <button 
-                    onClick={() => { setEditingCoupon(coupon); setCouponForm({ ...coupon, discount: coupon.discount.toString() }); setShowCouponModal(true); }}
+                    onClick={() => { setEditingCoupon(coupon); setCouponForm({ code: coupon.code, discount: coupon.discount.toString(), description: coupon.description }); setShowCouponModal(true); }}
                     className="p-3 bg-white rounded-xl text-brand-900 hover:scale-110 transition-transform"
                   >
                     <Edit2 className="w-5 h-5" />
@@ -222,13 +222,6 @@ export default function AdminDashboard() {
                       required rows={2} value={couponForm.description} onChange={e => setCouponForm({...couponForm, description: e.target.value})}
                       placeholder="Coupon details..."
                       className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-1 focus:ring-brand-500/30 outline-none text-sm font-medium placeholder:text-gray-200 resize-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest block mb-1">Image URL</label>
-                    <input 
-                      required value={couponForm.imageUrl} onChange={e => setCouponForm({...couponForm, imageUrl: e.target.value})}
-                      className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-1 focus:ring-brand-500/30 outline-none text-xs font-medium text-gray-400"
                     />
                   </div>
                 </div>

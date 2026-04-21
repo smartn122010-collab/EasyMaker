@@ -96,12 +96,19 @@ export default function CustomerDashboard() {
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [coupons, setCoupons] = useState<any[]>([]);
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponInput, setCouponInput] = useState('');
   const [shopStatus, setShopStatus] = useState<'open' | 'closed'>('open');
   const [searchQuery, setSearchQuery] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isLocating, setIsLocating] = useState(false);
   const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications] = useState([
+    { id: 1, title: 'Welcome to Easy Maker!', body: 'Check out our new spicy burgers!', time: '2h ago' },
+    { id: 2, title: 'Limited Offer', body: 'Get 50% OFF on your first 3 orders.', time: '5h ago' }
+  ]);
   const [customerLocation, setCustomerLocation] = useState<[number, number] | null>(null);
   const [userData, setUserData] = useState<any>(null);
   const prevStatuses = useRef<Record<string, string>>({});
@@ -227,6 +234,22 @@ export default function CustomerDashboard() {
   };
 
   const totalAmount = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const discountAmount = appliedCoupon ? (totalAmount * appliedCoupon.discount / 100) : 0;
+  const finalTotal = totalAmount - discountAmount + 20;
+
+  const handleApplyCoupon = () => {
+    if (totalAmount <= 200) {
+      toast.error("Coupon only valid for orders above ₹200");
+      return;
+    }
+    const coupon = coupons.find(c => c.code === couponInput.toUpperCase());
+    if (coupon) {
+      setAppliedCoupon(coupon);
+      toast.success(`Coupon ${coupon.code} applied! ₹${(totalAmount * coupon.discount / 100).toFixed(0)} off`);
+    } else {
+      toast.error("Invalid coupon code");
+    }
+  };
 
   const placeOrder = async (address: string, phone: string) => {
     if (!auth.currentUser) return;
@@ -240,7 +263,9 @@ export default function CustomerDashboard() {
         items: cart,
         status: 'pending',
         driverId: null,
-        totalAmount,
+        totalAmount: finalTotal - 20, // Sum of items minus discount
+        discountAmount,
+        couponCode: appliedCoupon?.code || null,
         deliveryAddress: address,
         customerPhone: phone,
         customerCoords: customerLocation ? { lat: customerLocation[0], lng: customerLocation[1] } : null,
@@ -249,6 +274,8 @@ export default function CustomerDashboard() {
       };
       await addDoc(collection(db, 'orders'), orderData);
       setCart([]);
+      setAppliedCoupon(null);
+      setCouponInput('');
       setActiveTab('success');
     } catch (error: any) {
       toast.error(error.message);
@@ -503,11 +530,43 @@ export default function CustomerDashboard() {
           </div>
 
           <div className="bg-brand-900 p-8 rounded-[2.5rem] text-white space-y-6 shadow-2xl shadow-brand-100">
+            {/* Coupon Section */}
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-brand-100/40 uppercase tracking-widest block">Promo Code</label>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={couponInput}
+                  onChange={e => setCouponInput(e.target.value)}
+                  placeholder="Enter code" 
+                  className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl outline-none focus:bg-white/10 transition-all placeholder:text-white/20 text-sm font-bold" 
+                />
+                <button 
+                  onClick={handleApplyCoupon}
+                  className="px-6 bg-brand-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-brand-600 transition-all"
+                >
+                  Apply
+                </button>
+              </div>
+              {appliedCoupon && (
+                <div className="flex items-center gap-2 text-[10px] text-green-400 font-bold uppercase tracking-widest">
+                  <Tag className="w-3 h-3" />
+                  Code {appliedCoupon.code} applied!
+                </div>
+              )}
+            </div>
+
             <div className="space-y-3">
               <div className="flex justify-between text-brand-100/60 text-sm">
                 <span>Subtotal</span>
                 <span className="font-bold text-white">₹{totalAmount.toFixed(0)}</span>
               </div>
+              {appliedCoupon && (
+                <div className="flex justify-between text-green-400 text-sm">
+                  <span>Discount ({appliedCoupon.discount}%)</span>
+                  <span className="font-bold">-₹{discountAmount.toFixed(0)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-brand-100/60 text-sm">
                 <span>Delivery Fee</span>
                 <span className="font-bold text-white">₹20</span>
@@ -515,7 +574,7 @@ export default function CustomerDashboard() {
               <div className="h-px bg-white/10 my-4" />
               <div className="flex justify-between font-bold text-2xl">
                 <span>Total</span>
-                <span className="text-brand-500">₹{(totalAmount + 20).toFixed(0)}</span>
+                <span className="text-brand-500">₹{finalTotal.toFixed(0)}</span>
               </div>
             </div>
 
@@ -688,6 +747,45 @@ export default function CustomerDashboard() {
               <div className={cn("absolute top-1 w-4 h-4 bg-white rounded-full transition-all", isDarkMode ? "right-1" : "left-1")} />
             </div>
           </button>
+
+          {/* Notification Bar */}
+          <button 
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="w-full flex items-center justify-between p-5 bg-gray-50 rounded-3xl hover:bg-gray-100 transition-all group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-brand-100 text-brand-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Bell className="w-5 h-5" />
+              </div>
+              <span className="font-bold text-brand-900">Notification Bar</span>
+            </div>
+            <ChevronRight className={cn("w-5 h-5 text-gray-300 transition-transform", showNotifications && "rotate-90")} />
+          </button>
+
+          {/* Notifications List */}
+          <AnimatePresence>
+            {showNotifications && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden space-y-3"
+              >
+                {notifications.map(notif => (
+                  <div key={notif.id} className="bg-white p-4 rounded-2xl border border-gray-50 flex gap-4 items-start shadow-sm text-left">
+                    <div className="w-2 h-2 bg-brand-500 rounded-full mt-2 flex-shrink-0" />
+                    <div className="flex-1 text-left">
+                      <div className="flex justify-between items-start mb-1">
+                        <h5 className="font-bold text-sm text-brand-900">{notif.title}</h5>
+                        <span className="text-[10px] text-gray-300 font-bold uppercase">{notif.time}</span>
+                      </div>
+                      <p className="text-xs text-gray-400 leading-relaxed">{notif.body}</p>
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
           
           <button className="w-full flex items-center justify-between p-5 bg-gray-50 rounded-3xl hover:bg-gray-100 transition-all group">
             <div className="flex items-center gap-4">

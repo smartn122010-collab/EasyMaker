@@ -55,6 +55,8 @@
           "enum": ["pending", "accepted", "preparing", "out_for_delivery", "delivered", "cancelled"]
         },
         "totalAmount": { "type": "number" },
+        "discountAmount": { "type": "number", "description": "Discount applied via coupon" },
+        "couponCode": { "type": "string", "description": "Coupon code used for this order" },
         "deliveryAddress": { "type": "string" },
         "customerPhone": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
