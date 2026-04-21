@@ -41,6 +41,25 @@ import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 
+const EasyMakerLogo = () => (
+  <div className="w-full h-full bg-gradient-to-br from-brand-900 to-charcoal-900 flex flex-col items-center justify-center relative overflow-hidden p-6 group-hover:from-brand-950 group-hover:to-black transition-all duration-700">
+    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl -mr-16 -mt-16 animate-pulse" />
+    <div className="absolute bottom-0 left-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl -ml-16 -mb-16 animate-pulse" style={{ animationDelay: '1s' }} />
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border border-white/5 rounded-full" />
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-brand-500/5 rounded-full" />
+    
+    <div className="relative z-10 flex flex-col items-center text-center">
+      <div className="w-14 h-14 mb-3 border-2 border-brand-500/30 flex items-center justify-center rounded-2xl rotate-45 group-hover:rotate-[225deg] transition-transform duration-1000 bg-brand-900/50 backdrop-blur-md shadow-2xl shadow-brand-500/10">
+        <ShoppingBag className="w-7 h-7 text-brand-500 -rotate-45 group-hover:-rotate-[225deg] transition-transform duration-1000" />
+      </div>
+      <h2 className="text-2xl font-serif text-white tracking-[0.2em] leading-none font-light italic uppercase">
+        Easy<span className="font-bold text-brand-500 NOT-italic">Maker</span>
+      </h2>
+      <div className="h-px w-8 bg-brand-500/30 mt-3" />
+    </div>
+  </div>
+);
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [orders, setOrders] = useState<any[]>([]);
@@ -146,34 +165,39 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {coupons.map((coupon) => (
-          <motion.div layout key={coupon.id} className="bg-white rounded-3xl luxury-shadow border border-gray-100 overflow-hidden group">
-            <div className="relative h-40">
-              <img src={coupon.imageUrl} alt={coupon.code} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              <div className="absolute inset-0 bg-brand-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="flex gap-2">
+          <motion.div layout key={coupon.id} className="bg-white rounded-[2.5rem] luxury-shadow border border-brand-50 overflow-hidden group hover:-translate-y-1 transition-all duration-500">
+            <div className="relative h-44 overflow-hidden">
+              <EasyMakerLogo />
+              <div className="absolute inset-0 bg-brand-900/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 backdrop-blur-[2px]">
+                <div className="flex gap-4">
                   <button 
                     onClick={() => { setEditingCoupon(coupon); setCouponForm({ code: coupon.code, discount: coupon.discount.toString(), description: coupon.description }); setShowCouponModal(true); }}
-                    className="p-3 bg-white rounded-xl text-brand-900 hover:scale-110 transition-transform"
+                    className="p-4 bg-white rounded-2xl text-brand-900 hover:scale-110 active:scale-95 transition-all shadow-xl"
                   >
                     <Edit2 className="w-5 h-5" />
                   </button>
                   <button 
                     onClick={() => handleDeleteCoupon(coupon.id)}
-                    className="p-3 bg-white rounded-xl text-red-500 hover:scale-110 transition-transform"
+                    className="p-4 bg-white rounded-2xl text-red-500 hover:scale-110 active:scale-95 transition-all shadow-xl"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
               </div>
-              <div className="absolute top-4 right-4 bg-brand-500 text-white px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest">
-                {coupon.discount}% OFF
+              <div className="absolute top-6 right-6 charcoal-gradient text-white px-4 py-2 rounded-2xl flex flex-col items-center gap-0.5 luxury-shadow border border-white/10">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-60">OFF</span>
+                <span className="text-xl font-black">{coupon.discount}%</span>
               </div>
             </div>
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="text-xl font-bold text-brand-900 font-serif tracking-tight">{coupon.code}</h4>
+            <div className="p-8">
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="text-2xl font-serif font-light text-brand-900 tracking-tight leading-none italic group-hover:text-brand-500 transition-colors">
+                  {coupon.code}
+                </h4>
               </div>
-              <p className="text-sm text-gray-500 line-clamp-2">{coupon.description}</p>
+              <p className="text-sm text-gray-400 font-medium line-clamp-2 leading-relaxed opacity-60 group-hover:opacity-100 transition-opacity">
+                {coupon.description || "Enjoy premium homemade deliciousness with this exclusive offer."}
+              </p>
             </div>
           </motion.div>
         ))}

@@ -49,6 +49,25 @@ let DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
+const EasyMakerLogo = () => (
+  <div className="w-full h-full bg-gradient-to-br from-brand-900 to-charcoal-900 flex flex-col items-center justify-center relative overflow-hidden p-6 group-hover:from-brand-950 group-hover:to-black transition-all duration-700">
+    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl -mr-16 -mt-16 animate-pulse" />
+    <div className="absolute bottom-0 left-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl -ml-16 -mb-16 animate-pulse" style={{ animationDelay: '1s' }} />
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border border-white/5 rounded-full" />
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-brand-500/5 rounded-full" />
+    
+    <div className="relative z-10 flex flex-col items-center text-center">
+      <div className="w-12 h-12 mb-3 border-2 border-brand-500/30 flex items-center justify-center rounded-2xl rotate-45 group-hover:rotate-[225deg] transition-transform duration-1000 bg-brand-900/50 backdrop-blur-md shadow-2xl shadow-brand-500/10">
+        <ShoppingBag className="w-6 h-6 text-brand-500 -rotate-45 group-hover:-rotate-[225deg] transition-transform duration-1000" />
+      </div>
+      <h2 className="text-xl font-serif text-white tracking-[0.2em] leading-none font-light italic uppercase">
+        Easy<span className="font-bold text-brand-500 NOT-italic">Maker</span>
+      </h2>
+      <div className="h-px w-6 bg-brand-500/30 mt-2" />
+    </div>
+  </div>
+);
+
 // Custom icons
 const driverIcon = L.divIcon({
   className: 'custom-div-icon',
@@ -838,11 +857,11 @@ export default function CustomerDashboard() {
                 <motion.div 
                   key={coupon.id}
                   whileHover={{ scale: 1.02 }}
-                  className="flex-shrink-0 w-72 bg-white rounded-3xl luxury-shadow border border-brand-50 overflow-hidden"
+                  className="flex-shrink-0 w-72 bg-white rounded-3xl luxury-shadow border border-brand-50 overflow-hidden group"
                 >
-                  <div className="relative h-32">
-                    <img src={coupon.imageUrl} alt={coupon.code} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                    <div className="absolute top-3 right-3 bg-brand-500 text-white px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                  <div className="relative h-32 overflow-hidden">
+                    <EasyMakerLogo />
+                    <div className="absolute top-3 right-3 bg-brand-500 text-white px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest luxury-shadow">
                       {coupon.discount}% OFF
                     </div>
                   </div>
