@@ -63,9 +63,15 @@ const EasyMakerLogo = () => (
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isPinVerified, setIsPinVerified] = useState(() => sessionStorage.getItem('admin_verified') === 'true');
+  const [isPinVerified, setIsPinVerified] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const ADMIN_PIN = '7358';
+  
+  // Custom Logout/Lock function for PIN
+  const handleLock = () => {
+    setIsPinVerified(false);
+    setPinInput('');
+  };
   const [orders, setOrders] = useState<any[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [drivers, setDrivers] = useState<any[]>([]);
@@ -92,7 +98,6 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (pinInput === ADMIN_PIN) {
       setIsPinVerified(true);
-      sessionStorage.setItem('admin_verified', 'true');
       toast.success('Access Granted');
     } else {
       toast.error('Incorrect PIN');
@@ -1051,8 +1056,8 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-md text-center border border-brand-100"
         >
-          <div className="w-20 h-20 bg-brand-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-brand-100 shadow-xl">
-             <Lock className="w-10 h-10 text-brand-500" />
+          <div className="mb-8 scale-75">
+            <EasyMakerLogo />
           </div>
           <h2 className="text-3xl font-serif font-bold text-brand-900 mb-2">Admin Access</h2>
           <p className="text-gray-500 mb-8 font-medium">Please enter secure PIN to continue</p>
@@ -1080,7 +1085,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <AdminLayout activeTab={activeTab} setActiveTab={setActiveTab}>
+    <AdminLayout activeTab={activeTab} setActiveTab={setActiveTab} onLock={handleLock}>
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}

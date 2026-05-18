@@ -18,7 +18,8 @@ import {
   Send,
   Info,
   Settings,
-  ShoppingBag
+  ShoppingBag,
+  Lock
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -43,7 +44,17 @@ const sidebarItems: SidebarItem[] = [
   { id: 'about', label: 'About Us', icon: Info },
 ];
 
-export default function AdminLayout({ children, activeTab, setActiveTab }: { children: React.ReactNode, activeTab: string, setActiveTab: (tab: string) => void }) {
+export default function AdminLayout({ 
+  children, 
+  activeTab, 
+  setActiveTab,
+  onLock 
+}: { 
+  children: React.ReactNode, 
+  activeTab: string, 
+  setActiveTab: (tab: string) => void,
+  onLock?: () => void
+}) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [userData, setUserData] = useState<any>(null);
@@ -157,6 +168,15 @@ export default function AdminLayout({ children, activeTab, setActiveTab }: { chi
           </div>
 
           <div className="flex items-center gap-4">
+            {onLock && (
+              <button 
+                onClick={onLock}
+                title="Lock Admin Panel"
+                className="w-12 h-12 bg-white luxury-shadow rounded-2xl flex items-center justify-center text-gray-400 hover:text-red-500 transition-all border border-brand-50"
+              >
+                <Lock className="w-5 h-5 pointer-events-none" />
+              </button>
+            )}
             <button 
               onClick={() => setIsDarkMode(!isDarkMode)}
               className="w-12 h-12 bg-white luxury-shadow rounded-2xl flex items-center justify-center text-gray-400 hover:text-brand-900 transition-all border border-brand-50"
