@@ -1018,23 +1018,6 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <a 
-            href="https://whatsapp.com/channel/0029Vb7UGl90AgWJQzLO1M34" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="p-6 bg-green-50 rounded-2xl flex items-center justify-between hover:bg-green-100 transition-all group"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                <MessageSquare className="w-6 h-6 text-green-500" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-green-600 uppercase">Official Channel</p>
-                <p className="font-bold text-gray-900">WhatsApp Support</p>
-              </div>
-            </div>
-            <ExternalLink className="w-5 h-5 text-gray-300 group-hover:text-green-500 transition-all" />
-          </a>
         </div>
 
         <div className="pt-8 border-t border-gray-50">

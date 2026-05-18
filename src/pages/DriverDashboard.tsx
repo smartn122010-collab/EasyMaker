@@ -451,18 +451,6 @@ export default function DriverDashboard() {
                 <MapPin className="w-3.5 h-3.5 text-brand-500" />
                 <span>Home Made Food Delivery, 123 Gourmet Lane</span>
               </div>
-              <a 
-                href="https://whatsapp.com/channel/0029Vb7UGl90AgWJQzLO1M34" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center justify-between p-4 bg-white rounded-2xl hover:bg-brand-100 transition-all group luxury-shadow"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-[10px] font-black text-brand-900 uppercase tracking-widest">Driver Community</span>
-                </div>
-                <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-brand-500" />
-              </a>
             </div>
           </div>
 

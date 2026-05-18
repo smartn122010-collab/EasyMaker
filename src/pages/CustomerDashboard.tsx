@@ -831,18 +831,6 @@ export default function CustomerDashboard() {
                 <MapPin className="w-3 h-3" />
                 <span>Home Made Food Delivery, 123 Gourmet Lane, Foodie City</span>
               </div>
-              <a 
-                href="https://whatsapp.com/channel/0029Vb7UGl90AgWJQzLO1M34" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center justify-between p-3 bg-white rounded-xl hover:bg-brand-100 transition-all group"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-sm font-bold text-brand-900">Join our WhatsApp</span>
-                </div>
-                <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-brand-500" />
-              </a>
             </div>
           </div>
 
