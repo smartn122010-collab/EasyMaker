@@ -115,6 +115,7 @@ export default function CustomerDashboard() {
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [coupons, setCoupons] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponInput, setCouponInput] = useState('');
   const [shopStatus, setShopStatus] = useState<'open' | 'closed'>('open');
@@ -206,6 +207,11 @@ export default function CustomerDashboard() {
     const qCoupons = query(collection(db, 'coupons'), orderBy('createdAt', 'desc'));
     const unsubCoupons = onSnapshot(qCoupons, (snapshot) => {
       setCoupons(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
+    const qBanners = query(collection(db, 'banners'), orderBy('createdAt', 'desc'));
+    const unsubBanners = onSnapshot(qBanners, (snapshot) => {
+      setBanners(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
     const unsubSettings = onSnapshot(doc(db, 'settings', 'store'), (doc) => {
@@ -308,6 +314,92 @@ export default function CustomerDashboard() {
     return matchesSearch && matchesCategory;
   });
 
+  const BannerSlider = () => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    useEffect(() => {
+      if (banners.length === 0) return;
+      const interval = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % banners.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }, [banners.length]);
+
+    if (banners.length === 0) return null;
+
+    return (
+      <div className="relative h-72 rounded-[3.5rem] overflow-hidden luxury-shadow border border-white/10 group">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentIndex}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2, ease: "easeInOut" }}
+            className="absolute inset-0"
+          >
+            <motion.img 
+              initial={{ scale: 1.2 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 6, ease: "linear" }}
+              src={banners[currentIndex].imageUrl} 
+              alt={banners[currentIndex].title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-brand-900/90 via-brand-900/10 to-transparent flex flex-col justify-end p-12">
+               <motion.div
+                 initial={{ opacity: 0, y: 30 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 transition={{ delay: 0.6, duration: 0.8 }}
+               >
+                 <div className="flex items-center gap-3 mb-4">
+                   <div className="h-px w-8 bg-brand-500/50" />
+                   <p className="text-[10px] font-black text-brand-500 uppercase tracking-[0.5em]">Exclusive Selection</p>
+                 </div>
+                 <h2 className="text-5xl font-serif font-light text-white tracking-tight leading-none mb-4 italic">
+                   {banners[currentIndex].title}
+                 </h2>
+                 <p className="text-white/50 text-[10px] font-black tracking-[0.2em] max-w-[280px] leading-relaxed uppercase group-hover:text-white/80 transition-colors">
+                   {banners[currentIndex].description}
+                 </p>
+               </motion.div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+        
+        {/* Navigation Controls */}
+        <div className="absolute top-1/2 -translate-y-1/2 left-6 right-6 flex justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none px-2">
+           <button 
+             onClick={(e) => { e.stopPropagation(); setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length); }}
+             className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-white/50 hover:bg-white/20 hover:text-white transition-all luxury-shadow border border-white/5 pointer-events-auto"
+           >
+             <ArrowRight className="w-5 h-5 rotate-180" />
+           </button>
+           <button 
+             onClick={(e) => { e.stopPropagation(); setCurrentIndex((prev) => (prev + 1) % banners.length); }}
+             className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-white/50 hover:bg-white/20 hover:text-white transition-all luxury-shadow border border-white/5 pointer-events-auto"
+           >
+             <ArrowRight className="w-5 h-5" />
+           </button>
+        </div>
+
+        {/* Custom Progress Indicators */}
+        <div className="absolute bottom-8 right-12 flex gap-3">
+          {banners.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentIndex(i)}
+              className={cn(
+                "h-0.5 transition-all duration-700 rounded-full",
+                currentIndex === i ? "w-12 bg-brand-500" : "w-4 bg-white/10 hover:bg-white/30"
+              )}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const renderHome = () => (
     <div className="space-y-10 pb-32">
       {/* Shop Status Banner */}
@@ -384,6 +476,9 @@ export default function CustomerDashboard() {
         </button>
       </div>
 
+      {/* Banner Carousel */}
+      <BannerSlider />
+
       {/* Active Orders */}
       {orders.filter(o => ['accepted', 'preparing', 'picked_up'].includes(o.status)).length > 0 && (
         <div className="space-y-5">
@@ -444,60 +539,72 @@ export default function CustomerDashboard() {
       </div>
 
       {/* Featured Items / Popular */}
-      <div className="space-y-8">
+      <div className="space-y-10">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs font-black text-brand-900 uppercase tracking-[0.2em]">Popular Dishes</h3>
-          <button className="text-brand-500 font-black text-[10px] uppercase tracking-widest flex items-center gap-1">
-            View All <ChevronRight className="w-4 h-4" />
+          <div>
+            <h3 className="text-[10px] font-black text-brand-500 uppercase tracking-[0.4em] mb-1">Curation</h3>
+            <h4 className="text-3xl font-serif font-light text-brand-900 tracking-tight leading-none italic uppercase">
+              Chef's <span className="font-bold NOT-italic">Specialties</span>
+            </h4>
+          </div>
+          <button className="w-12 h-12 rounded-2xl bg-white luxury-shadow flex items-center justify-center text-brand-500 hover:bg-brand-50 transition-all border border-brand-50 group">
+            <ChevronRight className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 gap-10">
           {filteredMenu.map((item, idx) => (
             <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
+              transition={{ delay: idx * 0.1, duration: 0.8 }}
               key={item.id} 
-              className="bg-white rounded-[3rem] luxury-shadow border border-brand-50 overflow-hidden group flex flex-col sm:flex-row"
+              className="bg-white rounded-[3.5rem] luxury-shadow border border-brand-50 overflow-hidden group flex flex-col sm:flex-row hover:-translate-y-1 transition-all duration-700"
             >
-              <div className="relative w-full sm:w-56 h-56 sm:h-auto overflow-hidden">
+              <div className="relative w-full sm:w-64 h-64 sm:h-auto overflow-hidden">
                 <img 
                   src={item.imageUrl} 
                   alt={item.name} 
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" 
+                  className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000" 
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <button className="absolute top-6 left-6 w-12 h-12 bg-white/80 backdrop-blur-md rounded-2xl flex items-center justify-center text-gray-400 hover:text-brand-500 transition-all luxury-shadow">
-                  <Heart className="w-5 h-5" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                <button className="absolute top-8 left-8 w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-gray-400 hover:text-red-500 transition-all luxury-shadow border border-white/20">
+                  <Heart className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 </button>
-                <div className="absolute bottom-6 right-6 charcoal-gradient text-white px-4 py-1.5 rounded-full flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
-                  <Star className="w-3 h-3 fill-brand-500 text-brand-500" />
-                  {item.rating}
+                <div className="absolute bottom-8 left-8 flex items-center gap-2">
+                  <div className="charcoal-gradient text-white px-4 py-2 rounded-2xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest luxury-shadow border border-white/10">
+                    <Star className="w-3.5 h-3.5 fill-brand-500 text-brand-500" />
+                    {item.rating}
+                  </div>
                 </div>
               </div>
-              <div className="p-8 flex-1 flex flex-col justify-between">
+              <div className="p-10 flex-1 flex flex-col justify-between">
                 <div>
-                  <div className="flex justify-between items-start mb-3">
-                    <h4 className="font-serif text-2xl font-light text-brand-900 tracking-tight leading-tight">{item.name}</h4>
-                    <span className="text-brand-500 font-bold text-3xl">₹{item.price.toFixed(0)}</span>
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <p className="text-[10px] font-black text-brand-500 uppercase tracking-widest mb-1">{item.category}</p>
+                      <h4 className="font-serif text-3xl font-light text-brand-900 tracking-tight leading-tight group-hover:text-brand-500 transition-colors">{item.name}</h4>
+                    </div>
+                    <span className="text-brand-900 font-bold text-4xl tracking-tighter">₹{item.price.toFixed(0)}</span>
                   </div>
-                  <p className="text-gray-400 text-sm font-medium line-clamp-2 mb-8 leading-relaxed">{item.description}</p>
+                  <p className="text-gray-400 text-sm font-medium line-clamp-2 mb-10 leading-relaxed max-w-sm">{item.description}</p>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5 text-gray-400 text-[10px] font-black uppercase tracking-widest">
-                    <Clock className="w-3.5 h-3.5" />
-                    20-30 min
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2 text-gray-400 text-[10px] font-black uppercase tracking-widest">
+                    <Clock className="w-4 h-4 text-brand-500" />
+                    25-35 min
                   </div>
-                  <div className="w-1 h-1 bg-brand-500/20 rounded-full" />
-                  <div className="text-gray-400 text-[10px] font-black uppercase tracking-widest">Free Delivery</div>
+                  <div className="flex items-center gap-2 text-gray-400 text-[10px] font-black uppercase tracking-widest">
+                    <Truck className="w-4 h-4 text-brand-500" />
+                    Premium Delivery
+                  </div>
                   <motion.button 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => addToCart(item)}
-                    className="ml-auto charcoal-gradient text-white p-4 rounded-2xl luxury-shadow transition-all"
+                    className="ml-auto w-16 h-16 charcoal-gradient text-white rounded-[1.5rem] luxury-shadow transition-all flex items-center justify-center hover:shadow-brand-500/20"
                   >
-                    <Plus className="w-6 h-6" />
+                    <Plus className="w-8 h-8" />
                   </motion.button>
                 </div>
               </div>

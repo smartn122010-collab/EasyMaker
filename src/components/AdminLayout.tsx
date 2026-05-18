@@ -37,6 +37,7 @@ const sidebarItems: SidebarItem[] = [
   { id: 'menu', label: 'Menu Add', icon: PlusCircle },
   { id: 'orders', label: 'Order Receive', icon: ClipboardList },
   { id: 'dispatch', label: 'Send Order', icon: Send },
+  { id: 'banners', label: 'Slider Banner', icon: LayoutDashboard },
   { id: 'drivers', label: 'Delivery Driver', icon: Truck },
   { id: 'coupons', label: 'Coupn Manage', icon: ShoppingBag },
   { id: 'users', label: 'User Section', icon: Users },

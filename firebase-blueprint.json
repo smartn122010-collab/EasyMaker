@@ -111,6 +111,20 @@
       },
       "required": ["code", "discount"]
     },
+    "Banner": {
+      "title": "Banner",
+      "description": "Promotional slider images",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "link": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["imageUrl"]
+    },
     "StoreSettings": {
       "title": "StoreSettings",
       "description": "Global store configuration",
@@ -142,6 +156,10 @@
     "/coupons/{couponId}": {
       "schema": "Coupon",
       "description": "Discount codes"
+    },
+    "/banners/{bannerId}": {
+      "schema": "Banner",
+      "description": "Slider/Hero banners"
     },
     "/settings/{settingId}": {
       "schema": "StoreSettings",

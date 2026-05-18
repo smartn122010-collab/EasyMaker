@@ -76,6 +76,7 @@ export default function AdminDashboard() {
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [drivers, setDrivers] = useState<any[]>([]);
   const [coupons, setCoupons] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
   const [shopStatus, setShopStatus] = useState<'open' | 'closed'>('open');
   const [selectedDriver, setSelectedDriver] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -104,11 +105,142 @@ export default function AdminDashboard() {
       setPinInput('');
     }
   };
+  // Banner Form State
+  const [showBannerModal, setShowBannerModal] = useState(false);
+  const [bannerForm, setBannerForm] = useState({
+    imageUrl: '',
+    title: '',
+    description: '',
+    link: ''
+  });
+
   const [couponForm, setCouponForm] = useState({
     code: '',
     discount: '',
     description: ''
   });
+
+  const handleAddBanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, 'banners'), {
+        ...bannerForm,
+        createdAt: new Date().toISOString()
+      });
+      toast.success('Slider image added');
+      setShowBannerModal(false);
+      setBannerForm({ imageUrl: '', title: '', description: '', link: '' });
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleDeleteBanner = async (id: string) => {
+    if (confirm('Remove this slider image?')) {
+      try {
+        await deleteDoc(doc(db, 'banners', id));
+        toast.success('Slider image removed');
+      } catch (error: any) {
+        toast.error(error.message);
+      }
+    }
+  };
+
+  const renderBanners = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-2xl font-bold text-brand-900">Manage Slider Banners</h3>
+          <p className="text-sm text-gray-400">Add promotional images for customers</p>
+        </div>
+        <button 
+          onClick={() => setShowBannerModal(true)}
+          className="bg-brand-500 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-brand-100 hover:bg-brand-600 transition-all"
+        >
+          <Plus className="w-5 h-5" />
+          Add Slider Image
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {banners.map((banner) => (
+          <motion.div layout key={banner.id} className="bg-white rounded-[2.5rem] luxury-shadow border border-brand-50 overflow-hidden group">
+            <div className="relative h-64">
+              <img src={banner.imageUrl} alt={banner.title} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-brand-900/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-4 backdrop-blur-sm">
+                <button 
+                  onClick={() => handleDeleteBanner(banner.id)}
+                  className="p-4 bg-white rounded-2xl text-red-500 hover:scale-110 active:scale-95 transition-all shadow-xl"
+                >
+                  <Trash2 className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="absolute top-6 left-6 charcoal-gradient text-white px-4 py-2 rounded-2xl luxury-shadow border border-white/10">
+                <p className="text-xl font-serif font-light italic">{banner.title}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{banner.description}</p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+        {banners.length === 0 && (
+          <div className="col-span-full py-20 text-center bg-white rounded-[2.5rem] border border-dashed border-gray-200">
+            <p className="text-gray-400 font-medium font-serif italic text-xl">"No promotional masterpieces yet..."</p>
+            <p className="text-xs font-black uppercase tracking-widest text-brand-500 mt-2">Add your first slider image above</p>
+          </div>
+        )}
+      </div>
+
+      <AnimatePresence>
+        {showBannerModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setShowBannerModal(false)}
+              className="absolute inset-0 bg-brand-900/40 backdrop-blur-sm" 
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-[2.5rem] w-full max-w-md p-10 relative z-10 shadow-2xl space-y-6"
+            >
+              <h3 className="text-2xl font-serif font-light text-brand-900">
+                New <span className="font-bold italic text-brand-500">Banner Slider</span>
+              </h3>
+              <form onSubmit={handleAddBanner} className="space-y-4">
+                <div>
+                  <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest block mb-1">Image URL</label>
+                  <input 
+                    required value={bannerForm.imageUrl} onChange={e => setBannerForm({...bannerForm, imageUrl: e.target.value})}
+                    placeholder="https://images.unsplash.com/..."
+                    className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-1 focus:ring-brand-500/30 outline-none text-sm font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest block mb-1">Title</label>
+                  <input 
+                    value={bannerForm.title} onChange={e => setBannerForm({...bannerForm, title: e.target.value})}
+                    placeholder="e.g. MEGA OFFERS"
+                    className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-1 focus:ring-brand-500/30 outline-none text-sm font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-gray-300 uppercase tracking-widest block mb-1">Description</label>
+                  <input 
+                    value={bannerForm.description} onChange={e => setBannerForm({...bannerForm, description: e.target.value})}
+                    placeholder="e.g. 50% Special discount for you"
+                    className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-1 focus:ring-brand-500/30 outline-none text-sm font-bold"
+                  />
+                </div>
+                <div className="flex gap-4 pt-4">
+                  <button type="button" onClick={() => setShowBannerModal(false)} className="flex-1 py-4 text-gray-400 font-black text-[10px] uppercase tracking-widest bg-gray-50 rounded-xl">Cancel</button>
+                  <button type="submit" className="flex-1 py-4 text-white font-black text-[10px] uppercase tracking-widest charcoal-gradient rounded-xl shadow-lg">Upload Banner</button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   const toggleShopStatus = async () => {
     const newStatus = shopStatus === 'open' ? 'closed' : 'open';
@@ -339,6 +471,11 @@ export default function AdminDashboard() {
     const qCoupons = query(collection(db, 'coupons'), orderBy('createdAt', 'desc'));
     const unsubCoupons = onSnapshot(qCoupons, (snapshot) => {
       setCoupons(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
+    const qBanners = query(collection(db, 'banners'), orderBy('createdAt', 'desc'));
+    const unsubBanners = onSnapshot(qBanners, (snapshot) => {
+      setBanners(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
     const unsubSettings = onSnapshot(doc(db, 'settings', 'store'), (doc) => {
@@ -1100,6 +1237,7 @@ export default function AdminDashboard() {
           {activeTab === 'dispatch' && renderDispatch()}
           {activeTab === 'drivers' && renderDrivers()}
           {activeTab === 'coupons' && renderCoupons()}
+          {activeTab === 'banners' && renderBanners()}
           {activeTab === 'settings' && renderSettings()}
           {activeTab === 'about' && renderAbout()}
           {activeTab === 'users' && (
