@@ -35,7 +35,8 @@ import {
   ExternalLink,
   Tag,
   Power,
-  User
+  User,
+  Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
@@ -62,6 +63,9 @@ const EasyMakerLogo = () => (
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isPinVerified, setIsPinVerified] = useState(() => sessionStorage.getItem('admin_verified') === 'true');
+  const [pinInput, setPinInput] = useState('');
+  const ADMIN_PIN = '7358';
   const [orders, setOrders] = useState<any[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [drivers, setDrivers] = useState<any[]>([]);
@@ -83,6 +87,18 @@ export default function AdminDashboard() {
   // Coupon Form State
   const [showCouponModal, setShowCouponModal] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<any>(null);
+  
+  const handlePinSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pinInput === ADMIN_PIN) {
+      setIsPinVerified(true);
+      sessionStorage.setItem('admin_verified', 'true');
+      toast.success('Access Granted');
+    } else {
+      toast.error('Incorrect PIN');
+      setPinInput('');
+    }
+  };
   const [couponForm, setCouponForm] = useState({
     code: '',
     discount: '',
@@ -1026,6 +1042,42 @@ export default function AdminDashboard() {
       </div>
     </div>
   );
+
+  if (!isPinVerified) {
+    return (
+      <div className="fixed inset-0 bg-brand-900 flex items-center justify-center p-4 z-[100]">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-md text-center border border-brand-100"
+        >
+          <div className="w-20 h-20 bg-brand-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-brand-100 shadow-xl">
+             <Lock className="w-10 h-10 text-brand-500" />
+          </div>
+          <h2 className="text-3xl font-serif font-bold text-brand-900 mb-2">Admin Access</h2>
+          <p className="text-gray-500 mb-8 font-medium">Please enter secure PIN to continue</p>
+          
+          <form onSubmit={handlePinSubmit} className="space-y-6">
+            <input
+              type="password"
+              maxLength={4}
+              value={pinInput}
+              onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
+              placeholder="••••"
+              className="w-full text-center text-4xl tracking-[1em] py-4 bg-brand-50 border-2 border-brand-100 rounded-2xl focus:border-brand-500 outline-none transition-all font-bold text-brand-900"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="w-full py-4 bg-brand-500 text-white rounded-2xl font-bold luxury-shadow hover:bg-brand-600 transition-all active:scale-[0.98]"
+            >
+              Verify Access
+            </button>
+          </form>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <AdminLayout activeTab={activeTab} setActiveTab={setActiveTab}>
